@@ -1,0 +1,28 @@
+# Dependencias
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Variables de entorno (NUNCA subir al repo)
+.env
+server/.env
+client/.env
+
+# Build de producción
+client/dist/
+client/build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Archivos temporales
+*.tmp
+*.temp
