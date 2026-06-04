@@ -1,9 +1,8 @@
 const express = require("express");
+const router = express.Router();
 const multer = require("multer");
 const { protect } = require("../middleware/authMiddleware");
-const { analyzeCV } = require("../controllers/analyzeController");
-
-const router = express.Router();
+const { analyzeCV, getHistory, getAnalysis } = require("../controllers/analyzeController");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -17,22 +16,13 @@ const upload = multer({
   },
 });
 
-router.post("/", protect, (req, res, next) => {
-  upload.single("cv")(req, res, (err) => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === "LIMIT_FILE_SIZE") {
-        return res.status(400).json({
-          success: false,
-          message: "El archivo supera el límite de 10MB.",
-        });
-      }
-      return res.status(400).json({ success: false, message: err.message });
-    }
-    if (err) {
-      return res.status(400).json({ success: false, message: err.message });
-    }
-    next();
-  });
-}, analyzeCV);
+// Analizar CV
+router.post("/", protect, upload.single("cv"), analyzeCV);
+
+// Historial de análisis
+router.get("/history", protect, getHistory);
+
+// Obtener análisis específico
+router.get("/:id", protect, getAnalysis);
 
 module.exports = router;
