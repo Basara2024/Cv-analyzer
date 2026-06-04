@@ -3,26 +3,50 @@ node_modules/
 client/node_modules/
 server/node_modules/
 
-# Variables de entorno (NUNCA subir al repo)
+# Variables de entorno (NUNCA subir al repositorio)
 .env
-server/.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 client/.env
+server/.env
 
-# Build de producción
+# Builds de producción
+dist/
+build/
 client/dist/
 client/build/
+server/dist/
 
 # Logs
+logs/
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cachés
+.cache/
+.parcel-cache/
+
+# Cobertura de pruebas
+coverage/
 
 # Sistema operativo
 .DS_Store
 Thumbs.db
 
-# VS Code
+# Editor
 .vscode/
+.idea/
 
 # Archivos temporales
 *.tmp
 *.temp
+
+# Archivos de configuración local
+*.local
+
+# Archivos generados por Vite
+vite.svg
