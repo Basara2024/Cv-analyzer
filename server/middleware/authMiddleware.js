@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/userModel");
+const prisma = require("../config/db");
 
 const protect = async (req, res, next) => {
   try {
@@ -9,29 +9,19 @@ const protect = async (req, res, next) => {
     }
 
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "No autorizado. Por favor inicia sesión.",
-      });
+      return res.status(401).json({ success: false, message: "No autorizado. Por favor inicia sesión." });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // findByPk usa el id primario (INTEGER en MySQL)
-    const user = await User.findByPk(decoded.id);
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "El usuario asociado a este token ya no existe.",
-      });
+      return res.status(401).json({ success: false, message: "El usuario ya no existe." });
     }
 
     if (!user.is_active) {
-      return res.status(401).json({
-        success: false,
-        message: "Tu cuenta ha sido desactivada. Contacta al soporte.",
-      });
+      return res.status(401).json({ success: false, message: "Tu cuenta ha sido desactivada." });
     }
 
     req.user = user;
@@ -41,10 +31,7 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "Token inválido." });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Tu sesión ha expirado. Por favor inicia sesión nuevamente.",
-      });
+      return res.status(401).json({ success: false, message: "Tu sesión ha expirado." });
     }
     return res.status(500).json({ success: false, message: "Error interno del servidor." });
   }
@@ -53,10 +40,7 @@ const protect = async (req, res, next) => {
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "No tienes permisos para realizar esta acción.",
-      });
+      return res.status(403).json({ success: false, message: "No tienes permisos para realizar esta acción." });
     }
     next();
   };
