@@ -1,34 +1,12 @@
-const Anthropic = require("@anthropic-ai/sdk");
-
-const getClient = () => {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey || apiKey === "pendiente") {
-    const err = new Error("ANTHROPIC_API_KEY no configurada");
-    err.code = "INVALID_API_KEY";
-    throw err;
-  }
-  return new Anthropic({ apiKey });
-};
-
-const parseJsonFromAI = (raw) => {
-  const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-  return JSON.parse(cleaned);
-};
-
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+ 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+ 
 const analyzeWithAI = async (cvText) => {
-  const client = getClient();
-
-  const message = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 2000,
-    messages: [
-      {
-        role: "user",
-        content: `Eres un experto en recursos humanos y reclutamiento. Analiza el siguiente CV y responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin bloques de código, sin explicaciones.
-
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+ 
+  const prompt = `Eres un experto en recursos humanos y reclutamiento. Analiza el siguiente CV y responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin bloques de código, sin explicaciones.
+ 
 El JSON debe tener exactamente esta estructura:
 {
   "puntuacion_general": <número del 1 al 100>,
@@ -63,15 +41,19 @@ El JSON debe tener exactamente esta estructura:
   "fortalezas": ["<fortaleza 1>", "<fortaleza 2>", "<fortaleza 3>"],
   "areas_criticas": ["<área 1>", "<área 2>"]
 }
-
+ 
 CV a analizar:
-${cvText}`,
-      },
-    ],
-  });
-
-  const raw = message.content[0].text.trim();
-  return parseJsonFromAI(raw);
+${cvText}`;
+ 
+  const result = await model.generateContent(prompt);
+  const response = result.response;
+  const text = response.text().trim();
+ 
+  // Limpiar posibles bloques de código que Gemini pueda agregar
+  const clean = text.replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(clean);
+  return parsed;
 };
-
+ 
 module.exports = { analyzeWithAI };
+ 
