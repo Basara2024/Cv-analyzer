@@ -32,24 +32,47 @@ const handler = NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-TwitterProvider({
-  clientId: process.env.TWITTER_CLIENT_ID!,
-  clientSecret: process.env.TWITTER_CLIENT_SECRET!,
-}),
+    TwitterProvider({
+      clientId: process.env.TWITTER_CLIENT_ID!,
+      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+    }),
     LinkedInProvider({
       clientId: process.env.LINKEDIN_CLIENT_ID!,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
+    async signIn({ user, account }: any) {
+      // Solo para proveedores sociales
+      if (account?.provider !== "credentials") {
+        try {
+          const res = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/social-login`,
+            {
+              name: user.name,
+              email: user.email || `${user.id}@${account.provider}.com`,
+              provider: account.provider,
+              provider_id: user.id,
+              avatar_url: user.image,
+            }
+          );
+          if (res.data.success) {
+            user.token = res.data.token;
+            user.id = res.data.user.id;
+            user.role = res.data.user.role;
+          }
+        } catch (error) {
+          console.error("Error en social login:", error);
+          return false;
+        }
+      }
+      return true;
+    },
     async jwt({ token, user, account }: any) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.accessToken = user.token;
-      }
-      if (account?.provider !== "credentials") {
-        token.accessToken = account?.access_token;
       }
       return token;
     },

@@ -139,3 +139,50 @@ const updateProfile = async (req, res) => {
 };
 
 module.exports = { register, login, getMe, updateProfile };
+
+// @route POST /api/auth/social-login
+const socialLogin = async (req, res) => {
+  try {
+    const { name, email, provider, provider_id, avatar_url } = req.body;
+
+    if (!provider || !provider_id) {
+      return res.status(400).json({ success: false, message: "Datos del proveedor incompletos." });
+    }
+
+    // Buscar usuario existente por provider_id o email
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { provider_id: String(provider_id) },
+          { email: email?.toLowerCase() },
+        ],
+      },
+    });
+
+    // Si no existe, crearlo
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          name: name || "Usuario",
+          email: email?.toLowerCase() || `${provider_id}@${provider}.com`,
+          provider,
+          provider_id: String(provider_id),
+          avatar_url,
+        },
+      });
+    } else {
+      // Actualizar avatar si cambió
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatar_url, provider_id: String(provider_id) },
+      });
+    }
+
+    sendTokenResponse(res, 200, user);
+  } catch (error) {
+    console.error("Error en socialLogin:", error);
+    res.status(500).json({ success: false, message: "Error interno del servidor." });
+  }
+};
+
+module.exports = { register, login, getMe, updateProfile, socialLogin };
