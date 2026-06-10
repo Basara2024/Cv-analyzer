@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { protect } = require("../middleware/authMiddleware");
-const { analyzeCV, getHistory, getAnalysis } = require("../controllers/analyzeController");
+const { analyzeCV, getHistory, getAnalysis, deleteAnalysis } = require("../controllers/analyzeController");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -24,5 +24,8 @@ router.get("/history", protect, getHistory);
 
 // Obtener análisis específico
 router.get("/:id", protect, getAnalysis);
+
+// Eliminar análisis
+router.delete("/:id", protect, deleteAnalysis);
 
 module.exports = router;

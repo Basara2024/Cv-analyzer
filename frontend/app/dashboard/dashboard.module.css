@@ -182,3 +182,36 @@
 .mejoras { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
 .mejoras li { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 0.5rem; }
 .mejoraIcon { color: var(--accent-bright); flex-shrink: 0; }
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+}
+
+.tab {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.tabActive {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: 600;
+}
