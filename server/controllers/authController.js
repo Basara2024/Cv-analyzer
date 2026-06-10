@@ -122,23 +122,32 @@ const socialLogin = async (req, res) => {
       },
     });
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          name: name || "Usuario",
-          email: email?.toLowerCase() || `${provider_id}@${provider}.com`,
-          provider,
-          provider_id: String(provider_id),
-          avatar_url,
-          analyses_limit: PROVIDER_LIMITS[provider] || PROVIDER_LIMITS.email,
-        },
-      });
-    } else {
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: { avatar_url, provider_id: String(provider_id) },
-      });
-    }
+if (!user) {
+  user = await prisma.user.create({
+    data: {
+      name: name || "Usuario",
+      email: email?.toLowerCase() || `${provider_id}@${provider}.com`,
+      provider,
+      provider_id: String(provider_id),
+      avatar_url,
+      analyses_limit: PROVIDER_LIMITS[provider] || PROVIDER_LIMITS.email,
+    },
+  });
+} else {
+  user = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      avatar_url,
+      provider_id: String(provider_id),
+      provider,
+      // Actualizar límite si el proveedor da más intentos
+      analyses_limit: Math.max(
+        user.analyses_limit,
+        PROVIDER_LIMITS[provider] || PROVIDER_LIMITS.email
+      ),
+    },
+  });
+}
 
     sendTokenResponse(res, 200, user);
   } catch (error) {
