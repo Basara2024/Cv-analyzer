@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./AnalysisLimitBanner.module.css";
 
 interface LimitBannerProps {
@@ -17,6 +18,7 @@ export default function AnalysisLimitBanner({
   blockedUntil,
   cooldownMinutes,
 }: LimitBannerProps) {
+  const router = useRouter();
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function AnalysisLimitBanner({
               : "Actualiza a Pro para acceso ilimitado"}
           </p>
         </div>
-        <button className={styles.upgradeBtn}>
+        <button className={styles.upgradeBtn} onClick={() => router.push("/coming-soon")}>
           ⚡ Actualizar a Pro
         </button>
       </div>
@@ -88,7 +90,7 @@ export default function AnalysisLimitBanner({
       <div className={styles.progressBar}>
         <div
           className={styles.progressFill}
-          style={{ width: `${percentage}%`, background: barColor }}
+          style={{ width: `${Math.min(percentage, 100)}%`, background: barColor }}
         />
       </div>
       <p className={styles.limitHint}>
@@ -96,7 +98,9 @@ export default function AnalysisLimitBanner({
           ? "⚠️ Te queda 1 análisis gratuito"
           : `Te quedan ${remaining} análisis gratuitos`}
         {" — "}
-        <button className={styles.upgradeLink}>Actualiza a Pro</button>
+        <button className={styles.upgradeLink} onClick={() => router.push("/coming-soon")}>
+          Actualiza a Pro
+        </button>
         {" para acceso ilimitado"}
       </p>
     </div>
