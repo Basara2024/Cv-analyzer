@@ -31,15 +31,23 @@ const analyzeCV = async (req, res) => {
       },
     });
 
+    // Actualizar contadores
     await prisma.user.update({
       where: { id: req.user.id },
       data: {
         analysis_count: { increment: 1 },
+        analyses_used: { increment: 1 },
         last_analysis: new Date(),
+        last_analysis_at: new Date(),
       },
     });
 
-    res.status(200).json({ success: true, analysis, id: saved.id });
+    res.status(200).json({
+      success: true,
+      analysis,
+      id: saved.id,
+      limits: req.userLimits,
+    });
   } catch (error) {
     console.error("Error en analyzeCV:", error);
     if (error instanceof SyntaxError) {
@@ -82,11 +90,15 @@ const getAnalysis = async (req, res) => {
       return res.status(404).json({ success: false, message: "Análisis no encontrado." });
     }
 
-    res.status(200).json({ success: true, analysis: analysis.resultado_json, meta: {
-      id: analysis.id,
-      file_name: analysis.file_name,
-      created_at: analysis.created_at,
-    }});
+    res.status(200).json({
+      success: true,
+      analysis: analysis.resultado_json,
+      meta: {
+        id: analysis.id,
+        file_name: analysis.file_name,
+        created_at: analysis.created_at,
+      },
+    });
   } catch (error) {
     console.error("Error en getAnalysis:", error);
     res.status(500).json({ success: false, message: "Error al obtener el análisis." });
