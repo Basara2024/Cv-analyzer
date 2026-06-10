@@ -5,6 +5,7 @@ const prisma = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const analyzeRoutes = require("./routes/analyzeRoutes");
+const waitlistRoutes = require("./routes/waitlistRoutes");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/analyze", analyzeRoutes);
+app.use("/api/waitlist", waitlistRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import styles from "./coming-soon.module.css";
 
 export default function ComingSoonPage() {
@@ -8,16 +9,27 @@ export default function ComingSoonPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
+    setError("");
 
-    // Por ahora solo simulamos el envío
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSubmitted(true);
-    setLoading(false);
+    try {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/waitlist`, { email });
+      setSubmitted(true);
+    } catch (err: any) {
+      const msg = err.response?.data?.message;
+      if (err.response?.data?.alreadyRegistered) {
+        setSubmitted(true);
+      } else {
+        setError(msg || "Error al registrarte. Intenta de nuevo.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -25,7 +37,6 @@ export default function ComingSoonPage() {
       <div className={styles.blob1} />
       <div className={styles.blob2} />
 
-      {/* Navbar */}
       <nav className={styles.navbar}>
         <button className={styles.logo} onClick={() => router.back()}>
           <span className={styles.logoIcon}>⬡</span>
@@ -35,10 +46,8 @@ export default function ComingSoonPage() {
 
       <main className={styles.main}>
         <div className={`${styles.card} fade-up`}>
-          {/* Badge */}
           <span className={styles.tag}>⚡ Plan Pro</span>
 
-          {/* Icon */}
           <div className={styles.iconWrapper}>
             <span className={styles.icon}>🚀</span>
           </div>
@@ -48,7 +57,6 @@ export default function ComingSoonPage() {
             Estamos trabajando en el plan Pro para darte acceso ilimitado a análisis de CV, comparación de candidatos y muchas más funcionalidades pensadas para ti.
           </p>
 
-          {/* Features preview */}
           <div className={styles.features}>
             {[
               { icon: "∞", label: "Análisis ilimitados" },
@@ -65,7 +73,6 @@ export default function ComingSoonPage() {
             ))}
           </div>
 
-          {/* Email form */}
           {!submitted ? (
             <div className={styles.formSection}>
               <p className={styles.formLabel}>
@@ -84,6 +91,7 @@ export default function ComingSoonPage() {
                   {loading ? <span className={styles.spinner} /> : "Notifícame →"}
                 </button>
               </form>
+              {error && <p className={styles.error}>{error}</p>}
             </div>
           ) : (
             <div className={styles.successBox}>
