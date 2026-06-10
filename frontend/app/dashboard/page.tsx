@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import CVHistory from "./components/CVHistory";
+import AnalysisLimitBanner from "./components/AnalysisLimitBanner";
 import styles from "./dashboard.module.css";
 
 interface Category {
@@ -18,6 +19,13 @@ interface Analysis {
   categorias: Record<string, Category>;
   fortalezas: string[];
   areas_criticas: string[];
+}
+
+interface UserLimits {
+  plan: string;
+  analysesUsed: number;
+  analysesLimit: number;
+  blockedUntil?: string;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -41,10 +49,30 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [activeTab, setActiveTab] = useState<"upload" | "history">("upload");
+  const [userLimits, setUserLimits] = useState<UserLimits | null>(null);
+  const [cooldownMinutes, setCooldownMinutes] = useState(0);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth");
   }, [status, router]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const res = await api.get("/auth/me");
+        const user = res.data.user;
+        setUserLimits({
+          plan: user.plan,
+          analysesUsed: user.analysesUsed,
+          analysesLimit: user.analysesLimit,
+          blockedUntil: user.freeBlockedUntil,
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    if (status === "authenticated") fetchUserData();
+  }, [status, refreshTrigger]);
 
   if (status === "loading") {
     return <div className={styles.loading}>⬡</div>;
@@ -68,6 +96,8 @@ export default function Dashboard() {
     setLoading(true);
     setError("");
     setAnalysis(null);
+    setCooldownMinutes(0);
+
     try {
       const formData = new FormData();
       formData.append("cv", file);
@@ -77,7 +107,13 @@ export default function Dashboard() {
       setAnalysis(res.data.analysis);
       setRefreshTrigger((prev) => prev + 1);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Error al analizar el CV.");
+      const data = err.response?.data;
+      if (data?.code === "COOLDOWN") {
+        setCooldownMinutes(data.waitMinutes);
+      } else if (data?.code === "LIMIT_REACHED" || data?.code === "BLOCKED") {
+        setRefreshTrigger((prev) => prev + 1);
+      }
+      setError(data?.message || "Error al analizar el CV.");
     } finally {
       setLoading(false);
     }
@@ -93,6 +129,10 @@ export default function Dashboard() {
     }
   };
 
+  const isBlocked = userLimits?.blockedUntil && new Date(userLimits.blockedUntil) > new Date();
+  const isExhausted = userLimits && userLimits.analysesUsed >= userLimits.analysesLimit;
+  const canAnalyze = !isBlocked && !isExhausted && userLimits?.plan === "pro" || (!isBlocked && !isExhausted);
+
   return (
     <div className={styles.page}>
       <nav className={styles.navbar}>
@@ -105,6 +145,9 @@ export default function Dashboard() {
             <div className={styles.avatar}>{session?.user?.name?.[0]?.toUpperCase()}</div>
             <span className={styles.username}>{session?.user?.name}</span>
           </div>
+          {userLimits?.plan === "pro" && (
+            <span className={styles.proBadge}>⚡ Pro</span>
+          )}
           <button className={styles.logoutBtn} onClick={() => signOut({ callbackUrl: "/auth" })}>Salir</button>
         </div>
       </nav>
@@ -138,11 +181,22 @@ export default function Dashboard() {
               </p>
             </div>
 
+            {/* Banner de límites */}
+            {userLimits && (
+              <AnalysisLimitBanner
+                used={userLimits.analysesUsed}
+                limit={userLimits.analysesLimit}
+                plan={userLimits.plan}
+                blockedUntil={userLimits.blockedUntil}
+                cooldownMinutes={cooldownMinutes}
+              />
+            )}
+
             <div
-              className={`${styles.uploadZone} ${dragging ? styles.dragging : ""} ${file ? styles.filled : ""} fade-up`}
-              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+              className={`${styles.uploadZone} ${dragging ? styles.dragging : ""} ${file ? styles.filled : ""} ${!canAnalyze ? styles.uploadZoneDisabled : ""} fade-up`}
+              onDragOver={(e) => { if (canAnalyze) { e.preventDefault(); setDragging(true); } }}
               onDragLeave={() => setDragging(false)}
-              onDrop={handleDrop}
+              onDrop={canAnalyze ? handleDrop : undefined}
             >
               {file ? (
                 <div className={styles.fileInfo}>
@@ -155,30 +209,37 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <>
-                  <div className={styles.uploadIcon}>⬆</div>
-                  <p className={styles.uploadText}>Arrastra tu CV aquí</p>
-                  <p className={styles.uploadOr}>o</p>
-                  <label className={styles.browseBtn}>
-                    Selecciona un archivo
-                    <input type="file" accept=".pdf" style={{ display: "none" }} onChange={handleFileChange} />
-                  </label>
-                  <p className={styles.uploadHint}>Solo PDF · Máx. 10MB</p>
+                  <div className={styles.uploadIcon}>{canAnalyze ? "⬆" : "🔒"}</div>
+                  <p className={styles.uploadText}>
+                    {canAnalyze ? "Arrastra tu CV aquí" : "Análisis no disponible"}
+                  </p>
+                  {canAnalyze && (
+                    <>
+                      <p className={styles.uploadOr}>o</p>
+                      <label className={styles.browseBtn}>
+                        Selecciona un archivo
+                        <input type="file" accept=".pdf" style={{ display: "none" }} onChange={handleFileChange} />
+                      </label>
+                      <p className={styles.uploadHint}>Solo PDF · Máx. 10MB</p>
+                    </>
+                  )}
                 </>
               )}
             </div>
 
-            {error && <div className={styles.errorBox}>{error}</div>}
+            {error && !cooldownMinutes && <div className={styles.errorBox}>{error}</div>}
 
             <button
-              className={`${styles.analyzeBtn} ${(!file || loading) ? styles.analyzeBtnDisabled : ""} fade-up`}
-              disabled={!file || loading}
+              className={`${styles.analyzeBtn} ${(!file || loading || !canAnalyze) ? styles.analyzeBtnDisabled : ""} fade-up`}
+              disabled={!file || loading || !canAnalyze}
               onClick={handleAnalyze}
             >
               {loading ? (
                 <span className={styles.loadingRow}>
                   <span className={styles.spinner} /> Analizando tu CV...
                 </span>
-              ) : file ? "Analizar CV →" : "Sube un PDF para continuar"}
+              ) : !canAnalyze ? "Análisis agotados — Actualiza a Pro"
+                : file ? "Analizar CV →" : "Sube un PDF para continuar"}
             </button>
 
             {analysis && (
