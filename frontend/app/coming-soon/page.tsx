@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import styles from "./coming-soon.module.css";
+import { MatchiaLogo } from "@/app/components/MatchiaLogo";
 
 export default function ComingSoonPage() {
   const router = useRouter();
@@ -39,8 +40,8 @@ export default function ComingSoonPage() {
 
       <nav className={styles.navbar}>
         <button className={styles.logo} onClick={() => router.back()}>
-          <span className={styles.logoIcon}>⬡</span>
-          <span className={styles.logoText}>CVMind</span>
+          <MatchiaLogo className={styles.logoIcon} />
+          <span className={styles.logoText}>Matchia</span>
         </button>
       </nav>
 

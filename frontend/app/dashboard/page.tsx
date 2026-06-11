@@ -6,6 +6,7 @@ import api from "@/lib/api";
 import CVHistory from "./components/CVHistory";
 import AnalysisLimitBanner from "./components/AnalysisLimitBanner";
 import styles from "./dashboard.module.css";
+import { MatchiaLogo } from "@/app/components/MatchiaLogo";
 
 interface Category {
   puntuacion: number;
@@ -75,7 +76,7 @@ export default function Dashboard() {
   }, [status, refreshTrigger]);
 
   if (status === "loading") {
-    return <div className={styles.loading}>⬡</div>;
+    return <div className={styles.loading}><MatchiaLogo /></div>;
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -137,8 +138,8 @@ export default function Dashboard() {
     <div className={styles.page}>
       <nav className={styles.navbar}>
         <div className={styles.logo}>
-          <span className={styles.logoIcon}>⬡</span>
-          <span className={styles.logoText}>CVMind</span>
+          <MatchiaLogo className={styles.logoIcon} />
+          <span className={styles.logoText}>Matchia</span>
         </div>
         <div className={styles.navRight}>
           <div className={styles.user}>

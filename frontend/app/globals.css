@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
-
 :root {
   --bg-base: #0a0a0f;
   --bg-card: #111118;
@@ -18,8 +16,8 @@
   --text-primary: #f0f0f8;
   --text-secondary: #8888aa;
   --text-muted: #55556a;
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
   --radius: 12px;
   --radius-lg: 20px;
   --transition: 0.2s ease;

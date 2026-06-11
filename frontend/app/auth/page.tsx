@@ -1,13 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import axios from "axios";
 import styles from "./auth.module.css";
+import { MatchiaLogo } from "@/app/components/MatchiaLogo";
 
-export default function AuthPage() {
+function AuthPageInner() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const searchParams = useSearchParams();
+  // Priorizamos el registro: solo abrimos en login si la URL lo pide explícitamente.
+  const [mode, setMode] = useState<"login" | "register">(
+    searchParams.get("mode") === "login" ? "login" : "register"
+  );
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,8 +52,19 @@ export default function AuthPage() {
 
   const socialProviders = [
     {
+      id: "linkedin",
+      label: "Continuar con LinkedIn",
+      recommended: true,
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+      ),
+    },
+    {
       id: "google",
       label: "Continuar con Google",
+      recommended: false,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -60,18 +77,10 @@ export default function AuthPage() {
     {
       id: "twitter",
       label: "Continuar con X",
+      recommended: false,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-        </svg>
-      ),
-    },
-    {
-      id: "linkedin",
-      label: "Continuar con LinkedIn",
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2">
-          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
         </svg>
       ),
     },
@@ -82,43 +91,13 @@ export default function AuthPage() {
       <div className={styles.blob1} />
       <div className={styles.blob2} />
 
-      {/* Left panel */}
-      <div className={styles.left}>
-        <div className={styles.logo}>
-          <span className={styles.logoIcon}>⬡</span>
-          <span className={styles.logoText}>CVMind</span>
-        </div>
-        <div className={styles.pitch}>
-          <h1 className={styles.headline}>
-            Tu CV,<br />
-            <span className={styles.headlineAccent}>analizado</span><br />
-            por IA.
-          </h1>
-          <p className={styles.desc}>
-            Sube tu CV y recibe feedback detallado en segundos. Mejora tus chances de conseguir el trabajo que quieres.
-          </p>
-        </div>
-        <div className={styles.features}>
-          {[
-            { icon: "◈", label: "Análisis en segundos" },
-            { icon: "◎", label: "Feedback accionable" },
-            { icon: "◆", label: "Puntuación por sección" },
-          ].map((f) => (
-            <div className={styles.feature} key={f.label}>
-              <span className={styles.featureIcon}>{f.icon}</span>
-              <span>{f.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Right panel */}
       <div className={styles.right}>
         <div className={styles.card}>
+          <Link href="/" className={styles.cardLogo}>
+            <MatchiaLogo className={styles.logoIcon} />
+            <span className={styles.logoText}>Matchia</span>
+          </Link>
           <div className={styles.formHeader}>
-            <span className={styles.tag}>
-              {mode === "login" ? "Bienvenido de vuelta" : "Nuevo por aquí"}
-            </span>
             <h2 className={styles.formTitle}>
               {mode === "login" ? "Inicia sesión" : "Crea tu cuenta"}
             </h2>
@@ -132,11 +111,14 @@ export default function AuthPage() {
             {socialProviders.map((provider) => (
               <button
                 key={provider.id}
-                className={styles.btnSocial}
+                className={`${styles.btnSocial} ${provider.recommended ? styles.btnSocialRecommended : ""}`}
                 onClick={() => signIn(provider.id, { callbackUrl: "/dashboard" })}
               >
                 {provider.icon}
                 {provider.label}
+                {provider.recommended && (
+                  <span className={styles.recommendedBadge}>Recomendado</span>
+                )}
               </button>
             ))}
           </div>
@@ -206,5 +188,13 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthPageInner />
+    </Suspense>
   );
 }

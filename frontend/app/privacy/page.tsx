@@ -1,8 +1,9 @@
 import styles from "./privacy.module.css";
+import { MatchiaLogo } from "@/app/components/MatchiaLogo";
 
 export const metadata = {
-  title: "Políticas de Privacidad — CVMind",
-  description: "Políticas de privacidad y tratamiento de datos de CVMind",
+  title: "Políticas de Privacidad — Matchia",
+  description: "Políticas de privacidad y tratamiento de datos de Matchia",
 };
 
 export default function PrivacyPage() {
@@ -11,8 +12,8 @@ export default function PrivacyPage() {
       {/* Header */}
       <nav className={styles.navbar}>
         <a href="/" className={styles.logo}>
-          <span className={styles.logoIcon}>⬡</span>
-          <span className={styles.logoText}>CVMind</span>
+          <MatchiaLogo className={styles.logoIcon} />
+          <span className={styles.logoText}>Matchia</span>
         </a>
       </nav>
 
@@ -28,10 +29,10 @@ export default function PrivacyPage() {
           <section className={styles.section}>
             <h2>1. Información General</h2>
             <p>
-              CVMind ("nosotros", "nuestro" o "la plataforma") es un servicio de análisis de hojas de vida mediante inteligencia artificial. Esta política describe cómo recopilamos, usamos y protegemos tu información personal cuando utilizas nuestra plataforma en <strong>https://super-clafoutis-c5dcfe.netlify.app</strong>.
+              Matchia ("nosotros", "nuestro" o "la plataforma") es un servicio de análisis de hojas de vida mediante inteligencia artificial. Esta política describe cómo recopilamos, usamos y protegemos tu información personal cuando utilizas nuestra plataforma en <strong>https://super-clafoutis-c5dcfe.netlify.app</strong>.
             </p>
             <p>
-              Al usar CVMind, aceptas las prácticas descritas en esta política. Si no estás de acuerdo, te pedimos que no uses nuestros servicios.
+              Al usar Matchia, aceptas las prácticas descritas en esta política. Si no estás de acuerdo, te pedimos que no uses nuestros servicios.
             </p>
           </section>
 
@@ -121,14 +122,14 @@ export default function PrivacyPage() {
           <section className={styles.section}>
             <h2>9. Cookies</h2>
             <p>
-              CVMind utiliza cookies de sesión necesarias para mantener tu autenticación activa. No utilizamos cookies de rastreo ni publicidad de terceros.
+              Matchia utiliza cookies de sesión necesarias para mantener tu autenticación activa. No utilizamos cookies de rastreo ni publicidad de terceros.
             </p>
           </section>
 
           <section className={styles.section}>
             <h2>10. Cambios a esta Política</h2>
             <p>
-              Podemos actualizar esta política ocasionalmente. Te notificaremos sobre cambios significativos mediante un aviso en la plataforma o por correo electrónico. El uso continuado de CVMind después de los cambios implica tu aceptación.
+              Podemos actualizar esta política ocasionalmente. Te notificaremos sobre cambios significativos mediante un aviso en la plataforma o por correo electrónico. El uso continuado de Matchia después de los cambios implica tu aceptación.
             </p>
           </section>
 
