@@ -1,5 +1,4 @@
 import styles from "./privacy.module.css";
-import { MatchiaLogo } from "@/app/components/MatchiaLogo";
 
 export const metadata = {
   title: "Políticas de Privacidad — Matchia",
@@ -9,10 +8,9 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <div className={styles.page}>
-      {/* Header */}
       <nav className={styles.navbar}>
         <a href="/" className={styles.logo}>
-          <MatchiaLogo className={styles.logoIcon} />
+          <span className={styles.logoIcon}>⬡</span>
           <span className={styles.logoText}>Matchia</span>
         </a>
       </nav>
@@ -29,7 +27,7 @@ export default function PrivacyPage() {
           <section className={styles.section}>
             <h2>1. Información General</h2>
             <p>
-              Matchia ("nosotros", "nuestro" o "la plataforma") es un servicio de análisis de hojas de vida mediante inteligencia artificial. Esta política describe cómo recopilamos, usamos y protegemos tu información personal cuando utilizas nuestra plataforma en <strong>https://super-clafoutis-c5dcfe.netlify.app</strong>.
+              Matchia ("nosotros", "nuestro" o "la plataforma") es un servicio de análisis de hojas de vida mediante inteligencia artificial. Esta política describe cómo recopilamos, usamos y protegemos tu información personal cuando utilizas nuestra plataforma en <strong>https://matchia.co</strong>.
             </p>
             <p>
               Al usar Matchia, aceptas las prácticas descritas en esta política. Si no estás de acuerdo, te pedimos que no uses nuestros servicios.
@@ -59,7 +57,7 @@ export default function PrivacyPage() {
             <ul>
               <li>Proveer, mantener y mejorar nuestros servicios de análisis de CV.</li>
               <li>Autenticar tu identidad y gestionar tu cuenta.</li>
-              <li>Analizar tu CV mediante inteligencia artificial (Anthropic Claude) y generar feedback personalizado.</li>
+              <li>Analizar tu CV mediante inteligencia artificial (Google Gemini 2.0 Flash) y generar feedback personalizado.</li>
               <li>Guardar tu historial de análisis para que puedas consultarlo posteriormente.</li>
               <li>Enviarte comunicaciones relacionadas con tu cuenta cuando sea necesario.</li>
               <li>Detectar y prevenir fraudes o usos indebidos de la plataforma.</li>
@@ -69,7 +67,7 @@ export default function PrivacyPage() {
           <section className={styles.section}>
             <h2>4. Procesamiento de tu CV con Inteligencia Artificial</h2>
             <p>
-              Cuando subes tu CV, el texto es extraído del PDF y enviado a la API de Anthropic (Claude) para su análisis. Este proceso es temporal y el contenido de tu CV no es almacenado permanentemente en servidores de terceros. Solo guardamos el resultado del análisis (puntuaciones y feedback) en nuestra base de datos.
+              Cuando subes tu CV, el texto es extraído del PDF y enviado a la API de Google Gemini 2.0 Flash para su análisis. Este proceso es temporal y el contenido de tu CV no es almacenado permanentemente en servidores de terceros. Solo guardamos el resultado del análisis (puntuaciones y feedback) en nuestra base de datos.
             </p>
             <p>
               Te recomendamos no incluir información extremadamente sensible en tu CV como números de documentos de identidad completos, información bancaria o contraseñas.
@@ -80,7 +78,7 @@ export default function PrivacyPage() {
             <h2>5. Compartición de Datos</h2>
             <p>No vendemos, alquilamos ni compartimos tu información personal con terceros con fines comerciales. Solo compartimos datos con:</p>
             <ul>
-              <li><strong>Anthropic:</strong> para el procesamiento de análisis de CV mediante IA.</li>
+              <li><strong>Google Gemini:</strong> para el procesamiento de análisis de CV mediante IA.</li>
               <li><strong>Supabase:</strong> como proveedor de base de datos donde se almacena tu información de forma segura.</li>
               <li><strong>Google:</strong> si usas el inicio de sesión con Google.</li>
               <li><strong>Autoridades competentes:</strong> cuando sea requerido por ley.</li>
@@ -138,7 +136,7 @@ export default function PrivacyPage() {
             <p>Si tienes preguntas sobre esta política de privacidad, contáctanos:</p>
             <ul>
               <li><strong>Email:</strong> burgoschristian826@gmail.com</li>
-              <li><strong>Plataforma:</strong> https://super-clafoutis-c5dcfe.netlify.app</li>
+              <li><strong>Plataforma:</strong> https://matchia.co</li>
             </ul>
           </section>
 
