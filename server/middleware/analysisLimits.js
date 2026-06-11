@@ -2,7 +2,7 @@ const prisma = require("../config/db");
 
 // Límites por tipo de proveedor
 const LIMITS = {
-  email: 1,
+  email: 3,
   google: 3,
   twitter: 3,
   linkedin: 3,

@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const prisma = require("../config/db");
 
 const PROVIDER_LIMITS = {
-  email: 1,
+  email: 3,
   google: 3,
   twitter: 3,
   linkedin: 3,
