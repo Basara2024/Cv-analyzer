@@ -53,6 +53,24 @@
 }
 .logoutBtn:hover { border-color: var(--red); color: var(--red); }
 
+.businessButton {
+  background: #2563eb;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all var(--transition);
+}
+.businessButton:hover {
+  background: #1d4ed8;
+}
+
 .main {
   flex: 1;
   max-width: 680px;
