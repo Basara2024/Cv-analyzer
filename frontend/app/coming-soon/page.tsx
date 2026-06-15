@@ -158,8 +158,8 @@ export default function ComingSoonPage() {
                   required
                 >
                   <option value="">¿Cuál es tu interés?</option>
-                  <option value="personal">Personal — quiero mejorar mi CV</option>
-                  <option value="empresarial">Empresarial — quiero analizar candidatos</option>
+                  <option value="personal">Personal — Quiero mejorar mi CV</option>
+                  <option value="empresarial">Empresarial — Quiero analizar candidatos</option>
                 </select>
                 <button className={styles.btn} type="submit" disabled={loading}>
                   {loading ? <span className={styles.spinner} /> : "Notifícame"}
