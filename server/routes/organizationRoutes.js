@@ -1,0 +1,43 @@
+const express = require("express");
+const router = express.Router();
+const multer = require("multer");
+const { protect } = require("../middleware/authMiddleware");
+const {
+  createOrganization, getMyOrganization, getMembers, addMember, removeMember
+} = require("../controllers/organizationController");
+const {
+  createJobPosition, getJobPositions, updateJobPosition, deleteJobPosition
+} = require("../controllers/jobPositionController");
+const { bulkAnalyze, getCandidates, updateCandidate, addNote } = require("../controllers/candidateController");
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") cb(null, true);
+    else cb(new Error("Solo se aceptan PDFs"), false);
+  },
+});
+
+// Organización
+router.post("/", protect, createOrganization);
+router.get("/my", protect, getMyOrganization);
+
+// Miembros
+router.get("/:orgId/members", protect, getMembers);
+router.post("/:orgId/members", protect, addMember);
+router.delete("/:orgId/members/:userId", protect, removeMember);
+
+// Puestos de trabajo
+router.get("/:orgId/positions", protect, getJobPositions);
+router.post("/:orgId/positions", protect, createJobPosition);
+router.put("/:orgId/positions/:positionId", protect, updateJobPosition);
+router.delete("/:orgId/positions/:positionId", protect, deleteJobPosition);
+
+// Candidatos
+router.post("/:orgId/candidates/bulk", protect, upload.array("cvs", 20), bulkAnalyze);
+router.get("/:orgId/candidates", protect, getCandidates);
+router.put("/:orgId/candidates/:candidateId", protect, updateCandidate);
+router.post("/:orgId/candidates/:candidateId/notes", protect, addNote);
+
+module.exports = router;
