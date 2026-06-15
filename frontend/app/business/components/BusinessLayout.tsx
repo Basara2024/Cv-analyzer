@@ -122,14 +122,15 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
   }, [status, router]);
 
   useEffect(() => {
-    const fetchOrg = async () => {
-      try {
-        const res = await api.get("/organizations/my");
-        setOrg(res.data.organization);
-      } catch {
-        router.push("/dashboard");
-      }
-    };
+const fetchOrg = async () => {
+  try {
+    const res = await api.get("/organizations/my");
+    setOrg(res.data.organization);
+  } catch {
+    // Sin organización aún — dejamos entrar igual
+    console.log("Sin organización registrada");
+  }
+};;
     if (status === "authenticated") fetchOrg();
   }, [status]);
 
