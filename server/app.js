@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const analyzeRoutes = require("./routes/analyzeRoutes");
 const waitlistRoutes = require("./routes/waitlistRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
+const interviewRoutes = require("./routes/interviewRoutes");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/analyze", analyzeRoutes);
 app.use("/api/waitlist", waitlistRoutes);
 app.use("/api/organizations", organizationRoutes);
+app.use("/api/organizations", interviewRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ success: true, message: "Matchia API funcionando", timestamp: new Date().toISOString() });
