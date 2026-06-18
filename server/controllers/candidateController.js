@@ -6,7 +6,7 @@ const { checkOrgAccess } = require("./organizationController");
 // Analizar un CV con Gemini
 const analyzeCV = async (cvText) => {
   const response = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
     {
       contents: [{ parts: [{ text: `Eres un experto en recursos humanos. Analiza el siguiente CV y responde ÚNICAMENTE con JSON válido sin texto adicional.
 
@@ -37,7 +37,7 @@ const rankCandidates = async (candidates, jobDescription) => {
   ).join("\n");
 
   const response = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
     {
       contents: [{ parts: [{ text: `Eres un experto en reclutamiento. Dado el siguiente puesto de trabajo y los candidatos, asigna un ranking del 1 al 5 (5=mejor fit) a cada candidato. Responde ÚNICAMENTE con JSON.
 
