@@ -325,3 +325,7 @@
   .kpiGrid { grid-template-columns: 1fr; }
   .pageHeader { flex-direction: column; align-items: flex-start; }
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

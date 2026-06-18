@@ -396,3 +396,7 @@
   padding: 2rem;
   overflow-y: auto;
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
