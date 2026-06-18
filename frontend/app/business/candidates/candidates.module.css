@@ -671,3 +671,7 @@
   .scoresGrid { grid-template-columns: 1fr; }
   .resultCount { margin-left: 0; }
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
