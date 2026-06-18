@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import styles from "./positions.module.css";
+import { exportPositionToPDF, exportPositionToText } from "./exportPosition";
 
 interface Position {
   id: number;
@@ -28,6 +29,8 @@ export default function PositionsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingPosition, setEditingPosition] = useState<Position | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "paused" | "closed">("all");
+  const [exportMenuOpen, setExportMenuOpen] = useState<number | null>(null);
+  const [orgName, setOrgName] = useState<string>("");
 
   const [form, setForm] = useState({
     title: "",
@@ -45,6 +48,7 @@ export default function PositionsPage() {
         const orgRes = await api.get("/organizations/my");
         const org = orgRes.data.organization;
         setOrgId(org.id);
+        setOrgName(org.name || "");
 
         const posRes = await api.get(`/organizations/${org.id}/positions`);
         setPositions(posRes.data.positions || []);
@@ -236,6 +240,34 @@ export default function PositionsPage() {
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
                   </button>
+                  <div className={styles.exportWrapper}>
+                    <button
+                      className={styles.iconBtn}
+                      title="Exportar"
+                      onClick={() => setExportMenuOpen(exportMenuOpen === position.id ? null : position.id)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                    </button>
+                    {exportMenuOpen === position.id && (
+                      <div className={styles.exportMenu}>
+                        <button
+                          className={styles.exportOption}
+                          onClick={() => { exportPositionToPDF(position, orgName); setExportMenuOpen(null); }}
+                        >
+                          Exportar como PDF
+                        </button>
+                        <button
+                          className={styles.exportOption}
+                          onClick={() => { exportPositionToText(position, orgName); setExportMenuOpen(null); }}
+                        >
+                          Exportar como texto
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
