@@ -9,6 +9,7 @@ const {
   createJobPosition, getJobPositions, updateJobPosition, deleteJobPosition
 } = require("../controllers/jobPositionController");
 const { bulkAnalyze, getCandidates, updateCandidate, addNote, getPool, addToPosition } = require("../controllers/candidateController");
+const { createCampaign, sendCampaign, getCampaigns, getSuggestedCandidates } = require("../controllers/campaignController");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -43,5 +44,11 @@ router.post("/:orgId/candidates/:candidateId/notes", protect, addNote);
 // Pool de talento
 router.get("/:orgId/pool", protect, getPool);
 router.put("/:orgId/candidates/:candidateId/add-to-position", protect, addToPosition);
+
+// Campañas de mailing
+router.get("/:orgId/campaigns", protect, getCampaigns);
+router.post("/:orgId/campaigns", protect, createCampaign);
+router.post("/:orgId/campaigns/:campaignId/send", protect, sendCampaign);
+router.get("/:orgId/campaigns/suggested-candidates", protect, getSuggestedCandidates);
 
 module.exports = router;
