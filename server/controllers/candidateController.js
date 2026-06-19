@@ -6,7 +6,7 @@ const { checkOrgAccess } = require("./organizationController");
 // Analizar un CV con Gemini
 const analyzeCV = async (cvText) => {
   const response = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${process.env.GEMINI_API_KEY}`,
     {
       contents: [{ parts: [{ text: `Eres un experto en recursos humanos. Analiza el siguiente CV y responde ÚNICAMENTE con JSON válido sin texto adicional.
 
@@ -37,7 +37,7 @@ const rankCandidates = async (candidates, jobDescription) => {
   ).join("\n");
 
   const response = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${process.env.GEMINI_API_KEY}`,
     {
       contents: [{ parts: [{ text: `Eres un experto en reclutamiento. Dado el siguiente puesto de trabajo y los candidatos, asigna un ranking del 1 al 5 (5=mejor fit) a cada candidato. Responde ÚNICAMENTE con JSON.
 
@@ -202,4 +202,89 @@ const addNote = async (req, res) => {
   }
 };
 
-module.exports = { bulkAnalyze, getCandidates, updateCandidate, addNote };
+// @route GET /api/organizations/:orgId/pool
+const getPool = async (req, res) => {
+  try {
+    const { orgId } = req.params;
+    const member = await checkOrgAccess(req.user.id, orgId);
+    if (!member) return res.status(403).json({ success: false, message: "No tienes acceso." });
+
+    const { skill, min_experience, nivel, search } = req.query;
+
+    // Pool = candidatos marcados como in_pool O descartados (disponibles para reutilizar)
+    const candidates = await prisma.candidates.findMany({
+      where: {
+        org_id: parseInt(orgId),
+        OR: [{ in_pool: true }, { status: "descartado" }],
+      },
+      include: {
+        job_positions: { select: { id: true, title: true } },
+        candidate_notes: { include: { users: { select: { name: true } } }, orderBy: { created_at: "desc" } },
+      },
+      orderBy: { individual_score: "desc" },
+    });
+
+    // Filtros sobre el JSON de análisis (se hacen en memoria porque son campos JSONB)
+    let filtered = candidates;
+
+    if (skill) {
+      const skillLower = skill.toLowerCase();
+      filtered = filtered.filter((c) =>
+        c.analysis_result?.habilidades_clave?.some((s) => s.toLowerCase().includes(skillLower))
+      );
+    }
+
+    if (nivel) {
+      filtered = filtered.filter((c) => c.analysis_result?.nivel === nivel);
+    }
+
+    if (min_experience) {
+      const minExp = parseInt(min_experience);
+      filtered = filtered.filter((c) => (c.analysis_result?.experiencia_anos || 0) >= minExp);
+    }
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(searchLower) ||
+          c.email?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    res.status(200).json({ success: true, candidates: filtered, total: filtered.length });
+  } catch (error) {
+    console.error("Error en getPool:", error);
+    res.status(500).json({ success: false, message: "Error interno del servidor." });
+  }
+};
+
+// @route PUT /api/organizations/:orgId/candidates/:candidateId/add-to-position
+const addToPosition = async (req, res) => {
+  try {
+    const { orgId, candidateId } = req.params;
+    const member = await checkOrgAccess(req.user.id, orgId, ["owner", "admin", "recruiter"]);
+    if (!member) return res.status(403).json({ success: false, message: "No tienes acceso." });
+
+    const { job_position_id } = req.body;
+    if (!job_position_id) {
+      return res.status(400).json({ success: false, message: "Debes indicar el puesto." });
+    }
+
+    const candidate = await prisma.candidates.update({
+      where: { id: parseInt(candidateId) },
+      data: {
+        job_position_id: parseInt(job_position_id),
+        status: "en_revision",
+        in_pool: false,
+      },
+    });
+
+    res.status(200).json({ success: true, candidate });
+  } catch (error) {
+    console.error("Error en addToPosition:", error);
+    res.status(500).json({ success: false, message: "Error al mover el candidato." });
+  }
+};
+
+module.exports = { bulkAnalyze, getCandidates, updateCandidate, addNote, getPool, addToPosition };

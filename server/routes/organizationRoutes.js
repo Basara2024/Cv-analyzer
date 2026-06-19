@@ -8,7 +8,7 @@ const {
 const {
   createJobPosition, getJobPositions, updateJobPosition, deleteJobPosition
 } = require("../controllers/jobPositionController");
-const { bulkAnalyze, getCandidates, updateCandidate, addNote } = require("../controllers/candidateController");
+const { bulkAnalyze, getCandidates, updateCandidate, addNote, getPool, addToPosition } = require("../controllers/candidateController");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -39,5 +39,9 @@ router.post("/:orgId/candidates/bulk", protect, upload.array("cvs", 20), bulkAna
 router.get("/:orgId/candidates", protect, getCandidates);
 router.put("/:orgId/candidates/:candidateId", protect, updateCandidate);
 router.post("/:orgId/candidates/:candidateId/notes", protect, addNote);
+
+// Pool de talento
+router.get("/:orgId/pool", protect, getPool);
+router.put("/:orgId/candidates/:candidateId/add-to-position", protect, addToPosition);
 
 module.exports = router;
