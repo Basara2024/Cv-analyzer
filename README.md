@@ -1,6 +1,6 @@
 # Matchia — Plataforma de Análisis de CV con IA
 
-> Plataforma SaaS de análisis inteligente de hojas de vida para candidatos individuales y equipos de reclutamiento empresarial.
+> Plataforma SaaS de análisis inteligente de hojas de vida, enfocada actualmente en el **Dashboard Empresarial** para equipos de reclutamiento.
 
 **Producción:** [https://matchia.co](https://matchia.co)
 
@@ -14,34 +14,41 @@
 4. [Estructura del proyecto](#4-estructura-del-proyecto)
 5. [Setup local](#5-setup-local)
 6. [Variables de entorno](#6-variables-de-entorno)
-7. [Base de datos](#7-base-de-datos)
-8. [API endpoints](#8-api-endpoints)
-9. [Deploy en producción](#9-deploy-en-producción)
-10. [Planes y monetización](#10-planes-y-monetización)
-11. [Sprints completados](#11-sprints-completados)
-12. [Roadmap pendiente](#12-roadmap-pendiente)
+7. [Checklist de accesos para onboarding](#7-checklist-de-accesos-para-onboarding)
+8. [Trabajar desde un equipo nuevo](#8-trabajar-desde-un-equipo-nuevo)
+9. [Base de datos](#9-base-de-datos)
+10. [Sistema de roles y permisos](#10-sistema-de-roles-y-permisos)
+11. [API endpoints](#11-api-endpoints)
+12. [Deploy en producción](#12-deploy-en-producción)
+13. [Planes y monetización](#13-planes-y-monetización)
+14. [Sprints completados](#14-sprints-completados)
+15. [Roadmap pendiente](#15-roadmap-pendiente)
+16. [Flujo de trabajo y convenciones](#16-flujo-de-trabajo-y-convenciones)
 
 ---
 
 ## 1. Descripción general
 
-Matchia es una plataforma web que permite a usuarios individuales y empresas analizar hojas de vida (CVs) usando inteligencia artificial. El sistema extrae texto de archivos PDF, los envía a la API de Google Gemini 2.5 Flash y devuelve un análisis detallado con puntuaciones, fortalezas, áreas de mejora y recomendaciones personalizadas.
+Matchia es una plataforma web que permite analizar hojas de vida (CVs) usando inteligencia artificial. El sistema extrae texto de archivos PDF, los envía a la API de **Google Gemini 2.5 Flash** y devuelve un análisis detallado con puntuaciones, fortalezas, áreas de mejora y recomendaciones.
 
-### Casos de uso principales
+### Enfoque actual del desarrollo
 
-**Plan Individual (Free / Pro)**
+> **El foco de desarrollo activo es el Dashboard Empresarial (plan Business).** El plan Individual Pro ya tiene su base funcional (análisis, historial, límites) pero sus funcionalidades premium (export PDF, reescritura inteligente, dropdowns de enfoque) se implementarán **después** de que el plan Business esté completo, en producción estable y generando ingresos. El botón "Actualizar a Pro" del dashboard personal redirige a `/coming-soon` con una waitlist activa mientras tanto.
+
+### Casos de uso — Plan Individual (Free)
 - Análisis de CV propio con puntuación general y por categorías
 - Historial de análisis anteriores
-- Exportación de resultados
+- 3 análisis gratuitos por cuenta (igual para registro por email u OAuth)
 
-**Plan Business**
+### Casos de uso — Plan Business (en desarrollo activo)
 - Subida masiva de hasta 20 CVs simultáneos
 - Rankeo automático de candidatos contra descripción del puesto (IA)
-- Gestión de puestos de trabajo
-- Sistema de entrevistas internas con feedback
-- Dashboard compartido por equipo con roles
-- Pool de talento reutilizable
-- Campañas de mailing masivo a candidatos del pool
+- Gestión de puestos de trabajo (crear, editar, exportar a PDF/texto)
+- Sistema de entrevistas internas con feedback y evaluación por estrellas
+- Pool de talento reutilizable con filtros avanzados
+- Campañas de mailing masivo a candidatos descartados (Resend)
+- Dashboard compartido por equipo con sistema de roles
+- Notas e historial por candidato
 
 ---
 
@@ -52,14 +59,16 @@ Matchia es una plataforma web que permite a usuarios individuales y empresas ana
 | Frontend | Next.js 14 (App Router) + TypeScript | Netlify |
 | Backend | Node.js + Express.js | AWS EC2 (Ubuntu 24) |
 | Base de datos | PostgreSQL + Prisma ORM | Supabase |
-| IA | Google Gemini 2.5 Flash | Google AI Studio |
+| IA | **Google Gemini 2.5 Flash** | Google AI Studio |
 | Autenticación | NextAuth.js | — |
+| Envío de emails | Resend (dominio verificado matchia.co) | — |
 | Servidor web | Nginx + Certbot (SSL) | AWS EC2 |
 | Proceso manager | PM2 | AWS EC2 |
+| DNS / Dominio | Hostgator (zona DNS) | matchia.co |
 
 ### Proveedores OAuth configurados
 - Google
-- Twitter / X
+- Twitter / X (OAuth 1.0a)
 - LinkedIn (OpenID Connect)
 
 ---
@@ -84,9 +93,13 @@ AWS EC2 (18.227.7.206.nip.io)
   ├──► Supabase (PostgreSQL)
   │     Prisma ORM — queries y migraciones
   │
-  └──► Google Gemini 2.0 Flash API
-        Análisis individual y masivo de CVs
-        Rankeo de candidatos vs descripción de puesto
+  ├──► Google Gemini 2.5 Flash API
+  │     Análisis individual y masivo de CVs
+  │     Rankeo de candidatos vs descripción de puesto
+  │
+  └──► Resend API
+        Envío de campañas de mailing masivo
+        Dominio verificado: matchia.co
 ```
 
 ---
@@ -95,57 +108,52 @@ AWS EC2 (18.227.7.206.nip.io)
 
 ```
 cv_analizer/
+├── README.md                    → este archivo
 ├── frontend/                    → Next.js 14
 │   ├── app/
 │   │   ├── api/auth/[...nextauth]/
 │   │   │   └── route.ts         → NextAuth config (Google, Twitter, LinkedIn)
 │   │   ├── auth/                → Login / Registro
 │   │   ├── dashboard/           → Dashboard personal (plan individual)
-│   │   │   ├── components/
-│   │   │   │   ├── CVHistory.tsx
-│   │   │   │   ├── CVItem.tsx
-│   │   │   │   └── AnalysisLimitBanner.tsx
-│   │   │   └── page.tsx
 │   │   ├── business/            → Dashboard empresarial (plan business)
 │   │   │   ├── components/
 │   │   │   │   └── BusinessLayout.tsx
 │   │   │   ├── dashboard/       → Vista ejecutiva con KPIs
-│   │   │   ├── positions/       → Gestión de vacantes
-│   │   │   ├── candidates/      → Subida masiva y análisis
-│   │   │   ├── interviews/      → Sistema de entrevistas
-│   │   │   ├── pool/            → Pool de talento
-│   │   │   ├── campaigns/       → Campañas de mailing
-│   │   │   ├── team/            → Gestión del equipo
-│   │   │   ├── reports/         → Reportes y métricas
-│   │   │   └── settings/        → Configuración de empresa
-│   │   ├── coming-soon/         → Página waitlist plan Pro
+│   │   │   ├── positions/       → Gestión de vacantes + exportar PDF/texto
+│   │   │   ├── candidates/      → Subida masiva y análisis con ranking IA
+│   │   │   ├── interviews/      → Sistema de entrevistas internas
+│   │   │   ├── pool/            → Pool de talento con filtros
+│   │   │   ├── campaigns/       → Campañas de mailing masivo
+│   │   │   ├── team/            → Gestión del equipo y roles
+│   │   │   ├── reports/         → Reportes y métricas (pendiente)
+│   │   │   └── settings/        → Configuración de empresa (pendiente)
+│   │   ├── coming-soon/         → Waitlist plan Pro individual
 │   │   └── privacy/             → Políticas de privacidad
 │   └── lib/
 │       └── api.ts               → Instancia axios con interceptor JWT
 │
 └── server/                      → Node.js + Express
     ├── controllers/
-    │   ├── authController.js    → register, login, social-login, me
-    │   ├── analyzeController.js → analyze, history, get, delete
+    │   ├── authController.js
+    │   ├── analyzeController.js
     │   ├── organizationController.js
     │   ├── jobPositionController.js
-    │   ├── candidateController.js → bulkAnalyze, getCandidates, updateCandidate, addNote
-    │   └── interviewController.js
+    │   ├── candidateController.js   → bulkAnalyze, getPool, addToPosition
+    │   ├── interviewController.js
+    │   └── campaignController.js    → createCampaign, sendCampaign (Resend)
     ├── routes/
     │   ├── authRoutes.js
     │   ├── analyzeRoutes.js
-    │   ├── organizationRoutes.js
-    │   ├── interviewRoutes.js
+    │   ├── organizationRoutes.js    → agrupa positions, candidates, pool, interviews, campaigns
     │   └── waitlistRoutes.js
     ├── middleware/
-    │   ├── authMiddleware.js    → JWT protect
-    │   ├── fileValidation.js   → PDF validation (MIME + magic number)
-    │   └── analysisLimits.js   → Rate limiting + plan limits
+    │   ├── authMiddleware.js
+    │   └── fileValidation.js
     ├── services/
-    │   └── aiService.js        → Google Gemini API calls
+    │   └── aiService.js             → Google Gemini 2.5 Flash
     ├── config/
-    │   ├── db.js               → Prisma client
-    │   └── *.sql               → Schemas SQL de referencia
+    │   ├── db.js
+    │   └── *.sql                    → Schemas SQL de referencia
     ├── prisma/
     │   └── schema.prisma
     └── app.js
@@ -158,40 +166,33 @@ cv_analizer/
 ### Requisitos previos
 - Node.js v18+
 - npm v9+
-- Cuenta en Supabase con proyecto creado
-- API Key de Google Gemini (aistudio.google.com)
+- Acceso a Supabase, Google AI Studio y Resend (ver sección de accesos)
 
 ### 1. Clonar el repositorio
-
 ```bash
 git clone https://github.com/Basara2024/Cv-analyzer.git
 cd Cv-analyzer
 ```
 
-### 2. Configurar el backend
-
+### 2. Backend
 ```bash
 cd server
 npm install
-cp .env.example .env
-# Edita el .env con tus credenciales reales
+# Crear .env manualmente (ver Variables de entorno)
 npx prisma db pull
 npx prisma generate
 npm run dev
 ```
+Corre en `http://localhost:5000`
 
-El servidor corre en `http://localhost:5000`
-
-### 3. Configurar el frontend
-
+### 3. Frontend
 ```bash
 cd ../frontend
 npm install
-# Crea el archivo .env.local con las variables necesarias
+# Crear .env.local manualmente (ver Variables de entorno)
 npm run dev
 ```
-
-El frontend corre en `http://localhost:3000`
+Corre en `http://localhost:3000`
 
 ---
 
@@ -200,71 +201,130 @@ El frontend corre en `http://localhost:3000`
 ### Backend — `server/.env`
 
 ```env
-# Servidor
 PORT=5000
 NODE_ENV=development
 
 # Supabase PostgreSQL (usar connection pooler puerto 6543)
 DATABASE_URL=postgresql://postgres.xxxx:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
 
-# JWT
 JWT_SECRET=clave_secreta_larga_aleatoria
 JWT_EXPIRES_IN=7d
 
-# Google Gemini IA
+# Google Gemini 2.5 Flash
 GEMINI_API_KEY=AIza...
 
-# Frontend (CORS)
+# Resend (campañas de mailing)
+RESEND_API_KEY=re_xxxxxxxxxxxx
+
 CLIENT_URL=https://matchia.co
 ```
 
 ### Frontend — `frontend/.env.local`
 
 ```env
-# NextAuth
 NEXTAUTH_URL=https://matchia.co
 NEXTAUTH_SECRET=clave_secreta_larga
 
-# Backend API
 NEXT_PUBLIC_API_URL=https://18.227.7.206.nip.io/api
 
-# Google OAuth
 GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-...
 
-# Twitter OAuth 1.0a
 TWITTER_CLIENT_ID=API_Key
 TWITTER_CLIENT_SECRET=API_Key_Secret
 
-# LinkedIn OAuth (OpenID Connect)
 LINKEDIN_CLIENT_ID=xxx
 LINKEDIN_CLIENT_SECRET=xxx
 ```
 
-> **Importante:** Nunca subir los archivos `.env` ni `.env.local` al repositorio. Están protegidos por `.gitignore`.
+> **Nunca subir `.env` ni `.env.local` a GitHub.** Están protegidos por `.gitignore`.
 
 ---
 
-## 7. Base de datos
+## 7. Checklist de accesos para onboarding
+
+Si una persona nueva (tú en otro equipo, o un colaborador) va a trabajar en el proyecto, esto es lo que necesita según su rol:
+
+### Mínimo para programar (cualquier colaborador técnico)
+
+| Elemento | Cómo se obtiene |
+|---|---|
+| Repositorio GitHub | Invitación como colaborador en `Basara2024/Cv-analyzer` |
+| `server/.env` | Copiar desde un equipo que ya lo tenga — **nunca está en GitHub** |
+| `frontend/.env.local` | Copiar desde un equipo que ya lo tenga — **nunca está en GitHub** |
+
+### Si necesita acceso al servidor (SSH)
+
+| Elemento | Cómo se obtiene |
+|---|---|
+| `cv-analyzer-key.pem` | Copiar por canal seguro (USB, Drive privado) — **nunca por canales públicos** |
+
+### Si necesita modificar infraestructura
+
+| Servicio | Acción recomendada |
+|---|---|
+| Supabase | Invitar como colaborador del proyecto (no compartir contraseña) |
+| Netlify | Invitar como colaborador del sitio |
+| AWS | Crear usuario IAM individual (evitar compartir la cuenta root) |
+| Resend | Invitar como miembro del team en Resend |
+| Hostgator (DNS) | Compartir credenciales con extremo cuidado, o gestionar tú los cambios de DNS directamente |
+| Google Cloud Console / Twitter Dev / LinkedIn Dev | Agregar como colaborador del proyecto OAuth si necesita modificar redirects |
+
+**Regla general:** preferir siempre invitaciones de colaborador sobre compartir contraseñas. Los 3 archivos sensibles (`.env`, `.env.local`, `.pem`) son la única excepción real porque no tienen sistema de invitación — deben transferirse manualmente por un canal seguro.
+
+---
+
+## 8. Trabajar desde un equipo nuevo
+
+**1. Copiar la llave SSH**
+Transfiere `cv-analyzer-key.pem` desde el equipo original (USB, Drive privado). En Mac/Linux:
+```bash
+chmod 400 cv-analyzer-key.pem
+```
+
+**2. Clonar el repositorio**
+```bash
+git clone https://github.com/Basara2024/Cv-analyzer.git
+cd Cv-analyzer
+```
+
+**3. Recrear los archivos de entorno**
+Copia manualmente `server/.env` y `frontend/.env.local` desde el equipo original.
+
+**4. Conectarte al servidor**
+```bash
+ssh -i "ruta/a/cv-analyzer-key.pem" ubuntu@18.227.7.206
+```
+
+**5. Instalar dependencias**
+```bash
+cd server && npm install && npx prisma generate
+cd ../frontend && npm install
+```
+
+A partir de aquí, el flujo (`git push` desde tu equipo → `git pull` + `pm2 restart` en el servidor) es idéntico sin importar la computadora.
+
+---
+
+## 9. Base de datos
 
 ### Tablas principales
 
 | Tabla | Descripción |
 |---|---|
-| `users` | Usuarios registrados — plan, límites de análisis, provider OAuth |
-| `analyses` | Historial de análisis individuales con resultado en JSONB |
-| `organizations` | Empresas registradas en el plan Business |
-| `org_members` | Miembros de cada organización con roles (owner/admin/recruiter/viewer) |
-| `job_positions` | Puestos de trabajo creados por la empresa |
-| `candidates` | CVs analizados vinculados a puestos — score IA y ranking 1-5 |
+| `users` | Usuarios — plan, límites de análisis, provider OAuth |
+| `analyses` | Historial de análisis individuales (JSONB) |
+| `organizations` | Empresas registradas en plan Business |
+| `org_members` | Miembros por organización — roles: `owner`, `admin`, `recruiter` |
+| `job_positions` | Puestos de trabajo |
+| `candidates` | CVs analizados — score IA, ranking 1-5, estado, `in_pool` |
 | `candidate_notes` | Notas del reclutador por candidato |
-| `interviews` | Entrevistas agendadas con tipo, fecha, entrevistador, feedback |
+| `interviews` | Entrevistas — tipo, fecha, entrevistador, feedback, evaluación 1-5 |
 | `email_campaigns` | Campañas de mailing masivo |
-| `campaign_recipients` | Destinatarios por campaña |
-| `waitlist` | Lista de espera para el plan Pro |
+| `campaign_recipients` | Destinatarios por campaña — estado de envío |
+| `waitlist` | Lista de espera para el plan Pro individual |
 
-### Ejecutar schemas SQL
-Los archivos `.sql` en `server/config/` son de referencia. Para aplicar cambios nuevos usar el SQL Editor de Supabase directamente, luego:
+### Aplicar cambios de esquema
 
 ```bash
 npx prisma db pull   # sincroniza schema.prisma con la BD
@@ -272,222 +332,240 @@ npx prisma generate  # regenera el cliente Prisma
 pm2 restart cv-analyzer
 ```
 
-### Límites de análisis por plan
+### Límites de análisis (plan individual)
 
 | Tipo de registro | Análisis gratis | Plan Pro |
 |---|---|---|
-| Email / contraseña | 3 | Ilimitado |
-| OAuth (Google/Twitter/LinkedIn) | 3 | Ilimitado |
+| Email / contraseña | 3 | Ilimitado *(pendiente Stripe)* |
+| OAuth (Google/Twitter/LinkedIn) | 3 | Ilimitado *(pendiente Stripe)* |
 
-Protecciones adicionales:
+Protección activa:
 - Rate limit: máximo 5 requests por hora por IP
+
+> Nota: el cooldown de 30 min y el bloqueo de 24h fueron removidos del diseño original — el límite de 3 intentos es suficiente y reduce complejidad innecesaria.
 
 ---
 
-## 8. API endpoints
+## 10. Sistema de roles y permisos
+
+El sistema de roles dentro de una organización (plan Business) tiene **dos niveles reales**:
+
+| Rol | Permisos |
+|---|---|
+| `owner` / `admin` | Mismo nivel de poder. Acceso total: puestos, candidatos, pool, campañas, entrevistas **y Gestión de Equipo** (agregar/eliminar miembros, cambiar roles) |
+| `recruiter` | Acceso completo a todo el proceso operativo de HR (puestos, candidatos, pool, campañas, entrevistas). **Sin acceso** a Gestión de Equipo |
+
+> El rol `viewer` fue **eliminado completamente del sistema** (código, base de datos y CHECK constraints) — el modelo de negocio busca trabajo conjunto donde cada reclutador tiene autonomía operativa total, sin un rol de "solo lectura".
+
+`owner` y `admin` se tratan como equivalentes porque distintos managers de distintas áreas (ej. un manager de Tech y un manager de Ventas) necesitan el mismo nivel de control sobre sus propios procesos de contratación, sin depender de una sola persona (quien originalmente pagó la suscripción).
+
+---
+
+## 11. API endpoints
 
 ### Auth
 ```
-POST   /api/auth/register          → Registro con email y contraseña
-POST   /api/auth/login             → Login con email y contraseña
-POST   /api/auth/social-login      → Login con proveedor OAuth (Google/Twitter/LinkedIn)
-GET    /api/auth/me                → Datos del usuario autenticado
-PUT    /api/auth/update-profile    → Actualizar perfil
+POST   /api/auth/register
+POST   /api/auth/login
+POST   /api/auth/social-login
+GET    /api/auth/me
+PUT    /api/auth/update-profile
 ```
 
 ### Análisis individual
 ```
-POST   /api/analyze                → Analizar un CV (PDF) — requiere JWT
-GET    /api/analyze/history        → Historial de análisis del usuario
-GET    /api/analyze/:id            → Obtener análisis específico
-DELETE /api/analyze/:id            → Eliminar análisis
+POST   /api/analyze
+GET    /api/analyze/history
+GET    /api/analyze/:id
+DELETE /api/analyze/:id
 ```
 
-### Organizaciones
+### Organizaciones y equipo
 ```
-POST   /api/organizations                         → Crear organización
-GET    /api/organizations/my                      → Obtener organización del usuario
-GET    /api/organizations/:orgId/members          → Listar miembros
-POST   /api/organizations/:orgId/members          → Agregar miembro
-DELETE /api/organizations/:orgId/members/:userId  → Eliminar miembro
+POST   /api/organizations
+GET    /api/organizations/my
+GET    /api/organizations/:orgId/members
+POST   /api/organizations/:orgId/members
+DELETE /api/organizations/:orgId/members/:userId
+PUT    /api/organizations/:orgId/members/:userId/role
 ```
 
 ### Puestos de trabajo
 ```
-GET    /api/organizations/:orgId/positions              → Listar puestos
-POST   /api/organizations/:orgId/positions              → Crear puesto
-PUT    /api/organizations/:orgId/positions/:id          → Editar puesto
-DELETE /api/organizations/:orgId/positions/:id          → Eliminar puesto
+GET    /api/organizations/:orgId/positions
+POST   /api/organizations/:orgId/positions
+PUT    /api/organizations/:orgId/positions/:id
+DELETE /api/organizations/:orgId/positions/:id
 ```
 
 ### Candidatos
 ```
-POST   /api/organizations/:orgId/candidates/bulk        → Subida masiva (hasta 20 CVs)
-GET    /api/organizations/:orgId/candidates             → Listar candidatos
-PUT    /api/organizations/:orgId/candidates/:id         → Actualizar estado/datos
-POST   /api/organizations/:orgId/candidates/:id/notes   → Agregar nota
+POST   /api/organizations/:orgId/candidates/bulk
+GET    /api/organizations/:orgId/candidates
+PUT    /api/organizations/:orgId/candidates/:id
+POST   /api/organizations/:orgId/candidates/:id/notes
+PUT    /api/organizations/:orgId/candidates/:id/add-to-position
 ```
+
+### Pool de talento
+```
+GET    /api/organizations/:orgId/pool
+```
+Filtros soportados (query params): `skill`, `nivel`, `min_experience`, `search`
 
 ### Entrevistas
 ```
-POST   /api/organizations/:orgId/interviews             → Agendar entrevista
-GET    /api/organizations/:orgId/interviews             → Listar entrevistas
-PUT    /api/organizations/:orgId/interviews/:id         → Actualizar / agregar feedback
-DELETE /api/organizations/:orgId/interviews/:id         → Eliminar entrevista
+POST   /api/organizations/:orgId/interviews
+GET    /api/organizations/:orgId/interviews
+PUT    /api/organizations/:orgId/interviews/:id
+DELETE /api/organizations/:orgId/interviews/:id
 ```
 
-### Waitlist
+### Campañas de mailing
 ```
-POST   /api/waitlist               → Registrar email en lista de espera
+GET    /api/organizations/:orgId/campaigns
+POST   /api/organizations/:orgId/campaigns
+POST   /api/organizations/:orgId/campaigns/:id/send
+GET    /api/organizations/:orgId/campaigns/suggested-candidates
 ```
 
-### Health check
+### Waitlist y salud
 ```
-GET    /api/health                 → Estado del servidor
+POST   /api/waitlist
+GET    /api/health
 ```
 
 ---
 
-## 9. Deploy en producción
+## 12. Deploy en producción
 
 ### Frontend — Netlify
 
-1. Conectar repositorio GitHub en Netlify
-2. Configurar build:
-   - Base directory: `frontend`
-   - Build command: `npm run build`
-   - Publish directory: `frontend`
-3. Agregar variables de entorno en Netlify → Environment variables
-4. Archivo `netlify.toml` en la raíz configura el plugin de Next.js
+- Conectado al repositorio GitHub, deploy automático en cada push a `main`
+- Build: `npm run build` · Base directory: `frontend`
+- Dominio: `matchia.co` y `www.matchia.co` apuntan via DNS a Netlify (ver sección DNS abajo)
+- SSL: certificado Let's Encrypt gestionado por Netlify, auto-renovable
 
 ### Backend — AWS EC2
 
 **Datos del servidor:**
 - IP elástica: `18.227.7.206`
 - Dominio SSL: `18.227.7.206.nip.io`
-- SO: Ubuntu 24
-- Instancia: t3.micro
-
-**Comandos de mantenimiento:**
+- SO: Ubuntu 24 · Instancia: t3.micro
 
 ```bash
-# Conectarse al servidor
-ssh -i "C:\Users\AngelDevelop\cv-analyzer-key.pem" ubuntu@18.227.7.206
+# Conectarse
+ssh -i "cv-analyzer-key.pem" ubuntu@18.227.7.206
 
-# Actualizar código
+# Actualizar código (forma segura, evita conflictos de stash acumulados)
 cd Cv-analyzer/server
-git stash
-git pull
+git fetch origin
+git reset --hard origin/main
 npx prisma generate
 pm2 restart cv-analyzer
 
-# Ver logs en tiempo real
+# Logs y estado
 pm2 logs cv-analyzer --lines 30
-
-# Ver estado del proceso
 pm2 status
 ```
 
-**Servicios corriendo en el servidor:**
-- `nginx` — reverse proxy HTTPS en puerto 443 → 5000
-- `pm2` — mantiene el servidor Node.js corriendo 24/7
-- `certbot` — SSL automático con Let's Encrypt (renueva cada 90 días)
+> **Importante:** usar `git fetch origin && git reset --hard origin/main` en vez de `git stash && git pull` evita que stashes acumulados causen que archivos no se actualicen correctamente (bug detectado y corregido durante el Sprint 4 — las rutas de campañas no llegaban al servidor por esta razón).
 
 ### Base de datos — Supabase
+- Proyecto: `jzpcrrfcgvsxvqxvhcaq` · Región: US East
+- Usar siempre el **connection pooler** (puerto 6543)
 
-- Proyecto: `jzpcrrfcgvsxvqxvhcaq`
-- Región: US East
-- Usar siempre el **connection pooler** (puerto 6543) en el `DATABASE_URL` del servidor
+### DNS — Hostgator
+
+El dominio `matchia.co` se administra en la zona DNS de Hostgator. Registros activos:
+
+| Tipo | Nombre | Valor | Propósito |
+|---|---|---|---|
+| A | `matchia.co` | `75.2.60.5` | Apunta el dominio raíz a Netlify |
+| CNAME | `www` | `[proyecto].netlify.app.` | Apunta www a Netlify |
+| TXT | `resend._domainkey` | (clave DKIM) | Verificación de dominio en Resend |
+| MX | `send` | `feedback-smtp.us-east-1.amazonses.com` | Envío de correos vía Resend |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` | SPF para Resend |
+| TXT | `_dmarc` | `v=DMARC1; p=none;` | DMARC para Resend |
+
+> **Nota sobre Cloudflare:** existe intención de migrar el DNS a Cloudflare por seguridad adicional, pero los nameservers actuales siguen siendo los de Hostgator. Si se migra en el futuro, estos mismos 6 registros deben recrearse en Cloudflare **antes** de cambiar los nameservers.
 
 ### OAuth — Redirects configurados
-
-Para cada proveedor, las URIs de callback registradas son:
 ```
 https://matchia.co/api/auth/callback/google
 https://matchia.co/api/auth/callback/twitter
 https://matchia.co/api/auth/callback/linkedin
 ```
 
+### Resend — Dominio verificado
+`matchia.co` está verificado en Resend (DKIM, SPF, DMARC). Los correos de campañas se envían desde `reclutamiento@matchia.co`.
+
 ---
 
-## 10. Planes y monetización
+## 13. Planes y monetización
 
-| Plan | Precio mensual | Precio anual | Estado | Características principales |
+| Plan | Precio mensual | Precio anual | Estado | Características |
 |---|---|---|---|---|
 | Free | $0 | — | ✅ Activo | 3 análisis gratuitos |
-| Individual Pro | $10/mes | $100/año | 🔜 Próximamente | Análisis ilimitados, export PDF, dropdowns de área/enfoque, reescritura inteligente |
-| Business | $30/mes | $300/año | 🔜 Stripe pendiente | Dashboard empresarial completo, subida masiva, rankeo IA, entrevistas, equipo, mailing |
+| Individual Pro | $10/mes | $100/año | 🔜 Después del Business | Análisis ilimitados, export PDF, reescritura inteligente |
+| Business | $30/mes | $300/año | 🔧 En desarrollo activo | Dashboard empresarial completo |
 
-> **Prioridad actual:** El plan Business está en desarrollo activo. El plan Individual Pro se implementará una vez que el Business esté completamente funcional y en producción. El botón "Actualizar a Pro" redirige a `/coming-soon` con waitlist activa.
+> **Prioridad de negocio:** Business primero. El botón "Actualizar a Pro" (individual) redirige a `/coming-soon`. Stripe se integrará para ambos planes simultáneamente una vez el Business esté terminado y estable en producción.
 
 ---
 
-## 11. Sprints completados
+## 14. Sprints completados
 
-### Sprint 1 — Fundación del dashboard empresarial
-- Layout base con sidebar colapsable (9 secciones)
-- Header con buscador global, notificaciones y usuario
+### Sprint 1 — Fundación del dashboard empresarial ✅
+- Layout con sidebar colapsable (9 secciones) y header con buscador
 - Dashboard ejecutivo con KPIs reales desde la BD
-- Widget de top vacantes y acciones rápidas
-- Navegación entre secciones placeholder
 
-### Sprint 2 — Core del producto
-- Vista de Puestos: crear, editar, pausar, cerrar vacantes
-- Exportar vacante a PDF (con branding) o texto plano para portales de empleo
-- Vista de Candidatos con subida masiva (hasta 20 CVs)
-- Análisis individual con Gemini + rankeo comparativo 1-5 contra descripción del puesto
-- Modal de detalle del candidato: resumen IA, fortalezas, habilidades, cambio de estado, notas del reclutador
+### Sprint 2 — Core del producto ✅
+- Vista de Puestos: crear, editar, pausar, cerrar, exportar a PDF/texto
+- Vista de Candidatos: subida masiva (20 CVs), análisis con Gemini 2.5 Flash, ranking 1-5, notas, cambio de estado
 
-### Sprint 3 — Valor diferencial (en progreso)
-- Sistema de entrevistas internas: agendar, tipo (RH/Manager/Técnica), asignar entrevistador, notas previas, feedback post-entrevista con estrellas
-- Pool de Talento (pendiente)
-- Campañas de mailing masivo (pendiente)
+### Sprint 3 — Valor diferencial ✅
+- Sistema de Entrevistas: agendar, tipo (RH/Manager/Técnica), feedback, evaluación por estrellas, visibilidad completa del candidato para el entrevistador
+- Pool de Talento: filtros por skill/nivel/experiencia, reutilización con un clic hacia una vacante activa
+- Notas e historial por candidato
+
+### Sprint 4 — Comunicación y reportes 🔧 (en progreso)
+- ✅ Campañas de mailing masivo (Resend + dominio verificado matchia.co, flujo de 3 pasos: puesto → candidatos sugeridos → mensaje)
+- ✅ Gestión de equipo: roles simplificados a `owner`/`admin` (igual poder) y `recruiter`, eliminación completa del rol `viewer`
+- ⏳ Reportes y métricas avanzadas — pendiente
 
 ### Funcionalidades base (previas a sprints)
-- Registro / Login con email y contraseña
-- OAuth: Google, Twitter/X, LinkedIn
-- Análisis individual de CV con Gemini
-- Historial de análisis
-- Sistema de límites por plan (1-3 análisis free, cooldown 30min, bloqueo 24h)
-- Coming-soon con waitlist conectada a Supabase
-- Validación de PDF en 3 capas (MIME, extensión, magic number)
-- Rate limiting por IP
-- Políticas de privacidad
+- Auth: email/contraseña + OAuth (Google, Twitter, LinkedIn)
+- Análisis individual con Gemini, historial, límites por plan
+- Validación de PDF en 3 capas, rate limiting por IP
+- Coming-soon con waitlist, políticas de privacidad
+- Migración completa de MySQL/Sequelize/React+Vite a Supabase/Prisma/Next.js
 
 ---
 
-## 12. Roadmap pendiente
+## 15. Roadmap pendiente
 
-### Sprint 3 (en progreso)
-- [ ] Pool de Talento con filtros (skill, país, experiencia)
-- [ ] Agregar candidato del pool a nueva vacante con un clic
-- [ ] Campañas de mailing masivo con Resend
-- [ ] Plantilla de correo editable por la empresa
-
-### Sprint 4 — Comunicación y reportes
-- [ ] Reportes avanzados: métricas de reclutamiento, tiempo promedio, tasa de conversión
-- [ ] Gestión de equipo: agregar/eliminar reclutadores, cambiar roles
+### Sprint 4 (cerrar)
+- [ ] Reportes avanzados: tiempo promedio de contratación, tasa de conversión, costo por contratación
 - [ ] Configuración de la empresa: editar datos, logo, NIT
 
 ### Sprint 5 — Monetización y pulido
-- [ ] Integración con Stripe (pagos mensuales y anuales)
+- [ ] Integración con Stripe (mensual y anual, ambos planes)
 - [ ] Popup de registro de empresa al activar plan Business
-- [ ] Dropdowns de área objetivo y enfoque en análisis individual
-- [ ] Export PDF del análisis individual con branding Matchia
-- [ ] Reescritura inteligente de secciones del CV
+- [ ] Funcionalidades premium del plan Individual Pro (dropdowns de área/enfoque, export PDF con branding, reescritura inteligente)
 - [ ] Búsqueda global en el dashboard empresarial
 - [ ] Centro de notificaciones (entrevistas pendientes, candidatos nuevos)
 - [ ] CAPTCHA en registro (hCaptcha)
 - [ ] Recuperación de contraseña por email
+- [ ] Migración completa de DNS a Cloudflare (si se decide)
 - [ ] Testing completo (Jest + Playwright)
 
 ---
 
-## Contribución y flujo de trabajo
+## 16. Flujo de trabajo y convenciones
 
 ### Ramas
-- `main` — producción (Netlify auto-deploys)
-- `feature/nombre` — nuevas funcionalidades
+- `main` — producción (Netlify auto-deploy en cada push)
 
 ### Flujo de deploy
 
@@ -496,14 +574,13 @@ https://matchia.co/api/auth/callback/linkedin
 git add .
 git commit -m "feat: descripción clara del cambio"
 git push
+# Netlify despliega el frontend automáticamente
 
-# 2. Frontend — Netlify despliega automáticamente al hacer push a main
-
-# 3. Backend — actualizar manualmente en AWS
-ssh -i "C:\Users\AngelDevelop\cv-analyzer-key.pem" ubuntu@18.227.7.206
+# 2. Backend — actualizar en AWS
+ssh -i "cv-analyzer-key.pem" ubuntu@18.227.7.206
 cd Cv-analyzer/server
-git stash && git pull
-npx prisma generate  # solo si hubo cambios en la BD
+git fetch origin && git reset --hard origin/main
+npx prisma generate   # solo si hubo cambios de BD
 pm2 restart cv-analyzer
 ```
 
@@ -515,9 +592,9 @@ pm2 restart cv-analyzer
 | `fix:` | Corrección de bug |
 | `style:` | Cambios de CSS/diseño |
 | `refactor:` | Reorganización de código |
-| `docs:` | Cambios en documentación |
-| `chore:` | Tareas de mantenimiento |
+| `docs:` | Documentación |
+| `chore:` | Mantenimiento |
 
 ---
 
-*Matchia — Desarrollado con Next.js, Node.js, Supabase y Google Gemini*
+*Matchia — Next.js, Node.js, Supabase, Google Gemini 2.5 Flash, Resend*
