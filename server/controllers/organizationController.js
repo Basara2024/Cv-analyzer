@@ -1,6 +1,6 @@
 const prisma = require("../config/db");
 
-const checkOrgAccess = async (userId, orgId, allowedRoles = ["owner", "admin", "recruiter", "viewer"]) => {
+const checkOrgAccess = async (userId, orgId, allowedRoles = ["owner", "admin", "recruiter"]) => {
   const member = await prisma.org_members.findFirst({
     where: { org_id: parseInt(orgId), user_id: userId, is_active: true },
   });
@@ -116,4 +116,34 @@ const removeMember = async (req, res) => {
   }
 };
 
-module.exports = { createOrganization, getMyOrganization, getMembers, addMember, removeMember, checkOrgAccess };
+const updateMemberRole = async (req, res) => {
+  try {
+    const member = await checkOrgAccess(req.user.id, req.params.orgId, ["owner", "admin"]);
+    if (!member) return res.status(403).json({ success: false, message: "No tienes acceso." });
+
+    const { role } = req.body;
+    if (!["owner", "admin", "recruiter"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Rol inválido." });
+    }
+
+    // Evitar que alguien se quite a sí mismo el último acceso de admin/owner
+    const targetMember = await prisma.org_members.findFirst({
+      where: { org_id: parseInt(req.params.orgId), user_id: parseInt(req.params.userId) },
+    });
+    if (!targetMember) {
+      return res.status(404).json({ success: false, message: "Miembro no encontrado." });
+    }
+
+    const updated = await prisma.org_members.update({
+      where: { id: targetMember.id },
+      data: { role },
+    });
+
+    res.status(200).json({ success: true, member: updated });
+  } catch (error) {
+    console.error("Error en updateMemberRole:", error);
+    res.status(500).json({ success: false, message: "Error al actualizar el rol." });
+  }
+};
+
+module.exports = { createOrganization, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole, checkOrgAccess };

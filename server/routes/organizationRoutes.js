@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const { protect } = require("../middleware/authMiddleware");
 const {
-  createOrganization, getMyOrganization, getMembers, addMember, removeMember
+  createOrganization, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole
 } = require("../controllers/organizationController");
 const {
   createJobPosition, getJobPositions, updateJobPosition, deleteJobPosition
@@ -28,6 +28,7 @@ router.get("/my", protect, getMyOrganization);
 router.get("/:orgId/members", protect, getMembers);
 router.post("/:orgId/members", protect, addMember);
 router.delete("/:orgId/members/:userId", protect, removeMember);
+router.put("/:orgId/members/:userId/role", protect, updateMemberRole);
 
 // Puestos de trabajo
 router.get("/:orgId/positions", protect, getJobPositions);
