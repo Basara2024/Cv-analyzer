@@ -23,8 +23,7 @@ const navItems = [
         <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
       </svg>
     ),
-  },
-  {
+  },  {
     href: "/business/positions",
     label: "Puestos",
     icon: (
@@ -81,6 +80,7 @@ const navItems = [
   {
     href: "/business/team",
     label: "Equipo",
+    adminOnly: true,
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1"/>
@@ -114,6 +114,7 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
   const router = useRouter();
   const pathname = usePathname();
   const [org, setOrg] = useState<Organization | null>(null);
+  const [userRole, setUserRole] = useState<string>("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -122,15 +123,15 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
   }, [status, router]);
 
   useEffect(() => {
-const fetchOrg = async () => {
-  try {
-    const res = await api.get("/organizations/my");
-    setOrg(res.data.organization);
-  } catch {
-    // Sin organización aún — dejamos entrar igual
-    console.log("Sin organización registrada");
-  }
-};;
+    const fetchOrg = async () => {
+      try {
+        const res = await api.get("/organizations/my");
+        setOrg(res.data.organization);
+        setUserRole(res.data.role || "");
+      } catch {
+        console.log("Sin organización registrada");
+      }
+    };
     if (status === "authenticated") fetchOrg();
   }, [status]);
 
@@ -169,7 +170,9 @@ const fetchOrg = async () => {
         </div>
 
         <nav className={styles.nav}>
-          {navItems.map((item) => (
+          {navItems
+            .filter((item) => !item.adminOnly || userRole === "owner" || userRole === "admin")
+            .map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -227,7 +230,9 @@ const fetchOrg = async () => {
               </div>
               <div className={styles.userMeta}>
                 <span className={styles.userName}>{session?.user?.name}</span>
-                <span className={styles.userRole}>Administrador</span>
+                <span className={styles.userRole}>
+                  {userRole === "owner" || userRole === "admin" ? "Administrador" : "Reclutador"}
+                </span>
               </div>
               <button className={styles.logoutBtn} onClick={() => signOut({ callbackUrl: "/auth" })}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
