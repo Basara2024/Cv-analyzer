@@ -242,7 +242,7 @@ export default function TeamPage() {
                 <label className={styles.label}>Rol</label>
                 <select className={styles.input} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                   <option value="recruiter">Reclutador — acceso completo a HR (puestos, candidatos, entrevistas)</option>
-                  <option value="admin">Admin — mismo nivel que owner, incluye gestión de equipo</option>
+                  <option value="admin">Admin — Gestión de equipo</option>
                 </select>
               </div>
               <p className={styles.hint}>
