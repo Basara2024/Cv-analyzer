@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
+const { getReports } = require("../controllers/reportController");
 const { protect } = require("../middleware/authMiddleware");
 const {
   createOrganization, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole
@@ -51,5 +52,8 @@ router.get("/:orgId/campaigns", protect, getCampaigns);
 router.post("/:orgId/campaigns", protect, createCampaign);
 router.post("/:orgId/campaigns/:campaignId/send", protect, sendCampaign);
 router.get("/:orgId/campaigns/suggested-candidates", protect, getSuggestedCandidates);
+
+// Reportes
+router.get("/:orgId/reports", protect, getReports);
 
 module.exports = router;
