@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { getReports } = require("../controllers/reportController");
 const { protect } = require("../middleware/authMiddleware");
+const { getReports } = require("../controllers/reportController");
 const {
   createOrganization, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole
 } = require("../controllers/organizationController");
