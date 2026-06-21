@@ -44,8 +44,8 @@ const createPreference = async (req, res) => {
         external_reference: String(subscription.id),
         back_urls: {
           success: `${process.env.CLIENT_URL}/business/onboarding?status=success`,
-          failure: `${process.env.CLIENT_URL}/coming-soon?status=failed`,
-          pending: `${process.env.CLIENT_URL}/coming-soon?status=pending`,
+          failure: `${process.env.CLIENT_URL}/dashboard?reopen_plan_modal=true&status=failed`,
+          pending: `${process.env.CLIENT_URL}/dashboard?reopen_plan_modal=true&status=pending`,
         },
         auto_return: "approved",
         notification_url: `${process.env.SERVER_URL}/api/payments/webhook`,

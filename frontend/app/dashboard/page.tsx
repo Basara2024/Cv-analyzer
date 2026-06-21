@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 import CVHistory from "./components/CVHistory";
 import AnalysisLimitBanner from "./components/AnalysisLimitBanner";
+import PlanModal from "./components/PlanModal";
 import styles from "./dashboard.module.css";
 import { MatchiaLogo } from "@/app/components/MatchiaLogo";
 import Spinner from "@/app/components/Spinner";
@@ -41,9 +42,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 const scoreColor = (score: number) =>
   score >= 75 ? "var(--green)" : score >= 50 ? "var(--yellow)" : "var(--red)";
 
-export default function Dashboard() {
+function DashboardInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [dragging, setDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"upload" | "history">("upload");
   const [userLimits, setUserLimits] = useState<UserLimits | null>(null);
   const [cooldownMinutes, setCooldownMinutes] = useState(0);
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth");
@@ -75,6 +78,15 @@ export default function Dashboard() {
     };
     if (status === "authenticated") fetchUserData();
   }, [status, refreshTrigger]);
+
+  // Reabrir el popup de planes si volvimos de un pago fallido/pendiente
+  useEffect(() => {
+    if (searchParams.get("reopen_plan_modal") === "true") {
+      setShowPlanModal(true);
+      // Limpia la URL para que no se reabra de nuevo en un refresh
+      router.replace("/dashboard");
+    }
+  }, [searchParams, router]);
 
   if (status === "loading") {
     return <div className={styles.loading}><MatchiaLogo /></div>;
@@ -321,6 +333,16 @@ export default function Dashboard() {
           <CVHistory onSelect={handleSelectHistory} refreshTrigger={refreshTrigger} />
         )}
       </main>
+
+      {showPlanModal && <PlanModal onClose={() => setShowPlanModal(false)} />}
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardInner />
+    </Suspense>
   );
 }
