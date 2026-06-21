@@ -3,9 +3,12 @@ const router = express.Router();
 const { register, login, getMe, updateProfile, socialLogin } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 const { changePassword } = require("../controllers/settingsController");
+const { forgotPassword, resetPassword } = require("../controllers/passwordResetController");
 
 // Rutas públicas
 router.post("/register", register);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 router.post("/login", login);
 router.post("/social-login", socialLogin);
 
