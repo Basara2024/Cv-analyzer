@@ -244,3 +244,17 @@
   color: var(--accent-bright);
   text-decoration: underline;
 }
+
+.forgotLink {
+  display: block;
+  text-align: right;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-top: 0.4rem;
+}
+ 
+.forgotLink:hover {
+  color: var(--accent-bright);
+}
+ 

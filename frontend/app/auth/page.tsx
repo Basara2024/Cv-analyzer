@@ -162,6 +162,11 @@ function AuthPageInner() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
               />
+              {mode === "login" && (
+                <Link href="/auth/forgot-password" className={styles.forgotLink}>
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              )}
             </div>
 
             {error && <div className={styles.error}>{error}</div>}
