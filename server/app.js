@@ -1,8 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const paymentRoutes = require("./routes/paymentRoutes");
 const prisma = require("./config/db");
-
 const authRoutes = require("./routes/authRoutes");
 const analyzeRoutes = require("./routes/analyzeRoutes");
 const waitlistRoutes = require("./routes/waitlistRoutes");
@@ -37,7 +37,7 @@ app.use(
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
+app.use("/api/payments", paymentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/analyze", analyzeRoutes);
 app.use("/api/waitlist", waitlistRoutes);
