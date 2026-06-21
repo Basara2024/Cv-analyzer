@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import styles from "./AnalysisLimitBanner.module.css";
+import PlanModal from "./PlanModal";
 
 interface LimitBannerProps {
   used: number;
@@ -18,12 +18,11 @@ export default function AnalysisLimitBanner({
   blockedUntil,
   cooldownMinutes,
 }: LimitBannerProps) {
-  const router = useRouter();
   const [timeLeft, setTimeLeft] = useState("");
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
     if (!blockedUntil) return;
-
     const interval = setInterval(() => {
       const diff = new Date(blockedUntil).getTime() - Date.now();
       if (diff <= 0) {
@@ -35,7 +34,6 @@ export default function AnalysisLimitBanner({
       const mins = Math.floor((diff % 3600000) / 60000);
       setTimeLeft(`${hours}h ${mins}m`);
     }, 1000);
-
     return () => clearInterval(interval);
   }, [blockedUntil]);
 
@@ -45,7 +43,6 @@ export default function AnalysisLimitBanner({
   const percentage = (used / limit) * 100;
   const isBlocked = blockedUntil && new Date(blockedUntil) > new Date();
   const isExhausted = remaining <= 0;
-
   const barColor =
     percentage >= 100 ? "var(--red)" :
     percentage >= 66 ? "var(--yellow)" :
@@ -53,20 +50,23 @@ export default function AnalysisLimitBanner({
 
   if (isBlocked || isExhausted) {
     return (
-      <div className={styles.blockedBanner}>
-        <div className={styles.blockedIcon}>🔒</div>
-        <div className={styles.blockedContent}>
-          <p className={styles.blockedTitle}>Has agotado tus análisis gratuitos</p>
-          <p className={styles.blockedDesc}>
-            {timeLeft
-              ? `Podrás volver a analizar en ${timeLeft}`
-              : "Actualiza a Pro para acceso ilimitado"}
-          </p>
+      <>
+        <div className={styles.blockedBanner}>
+          <div className={styles.blockedIcon}>🔒</div>
+          <div className={styles.blockedContent}>
+            <p className={styles.blockedTitle}>Has agotado tus análisis gratuitos</p>
+            <p className={styles.blockedDesc}>
+              {timeLeft
+                ? `Podrás volver a analizar en ${timeLeft}`
+                : "Actualiza a Pro para acceso ilimitado"}
+            </p>
+          </div>
+          <button className={styles.upgradeBtn} onClick={() => setShowPlanModal(true)}>
+            ⚡ Actualizar a Pro
+          </button>
         </div>
-        <button className={styles.upgradeBtn} onClick={() => router.push("/coming-soon")}>
-          ⚡ Actualizar a Pro
-        </button>
-      </div>
+        {showPlanModal && <PlanModal onClose={() => setShowPlanModal(false)} />}
+      </>
     );
   }
 
@@ -80,29 +80,32 @@ export default function AnalysisLimitBanner({
   }
 
   return (
-    <div className={styles.limitBanner}>
-      <div className={styles.limitHeader}>
-        <span className={styles.limitLabel}>Análisis gratuitos</span>
-        <span className={styles.limitCount} style={{ color: barColor }}>
-          {used} / {limit} usados
-        </span>
+    <>
+      <div className={styles.limitBanner}>
+        <div className={styles.limitHeader}>
+          <span className={styles.limitLabel}>Análisis gratuitos</span>
+          <span className={styles.limitCount} style={{ color: barColor }}>
+            {used} / {limit} usados
+          </span>
+        </div>
+        <div className={styles.progressBar}>
+          <div
+            className={styles.progressFill}
+            style={{ width: `${Math.min(percentage, 100)}%`, background: barColor }}
+          />
+        </div>
+        <p className={styles.limitHint}>
+          {remaining === 1
+            ? "⚠️ Te queda 1 análisis gratuito"
+            : `Te quedan ${remaining} análisis gratuitos`}
+          {" — "}
+          <button className={styles.upgradeLink} onClick={() => setShowPlanModal(true)}>
+            Actualiza a Pro
+          </button>
+          {" para acceso ilimitado"}
+        </p>
       </div>
-      <div className={styles.progressBar}>
-        <div
-          className={styles.progressFill}
-          style={{ width: `${Math.min(percentage, 100)}%`, background: barColor }}
-        />
-      </div>
-      <p className={styles.limitHint}>
-        {remaining === 1
-          ? "⚠️ Te queda 1 análisis gratuito"
-          : `Te quedan ${remaining} análisis gratuitos`}
-        {" — "}
-        <button className={styles.upgradeLink} onClick={() => router.push("/coming-soon")}>
-          Actualiza a Pro
-        </button>
-        {" para acceso ilimitado"}
-      </p>
-    </div>
+      {showPlanModal && <PlanModal onClose={() => setShowPlanModal(false)} />}
+    </>
   );
 }
