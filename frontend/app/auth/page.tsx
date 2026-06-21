@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import styles from "./auth.module.css";
 import { MatchiaLogo } from "@/app/components/MatchiaLogo";
 
@@ -17,6 +18,7 @@ function AuthPageInner() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,10 +27,23 @@ function AuthPageInner() {
 
     try {
       if (mode === "register") {
+        const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+        let recaptchaToken = "";
+
+        if (siteKey) {
+          if (!executeRecaptcha) {
+            setError("Verificación anti-bot no disponible. Recarga la página e intenta de nuevo.");
+            setLoading(false);
+            return;
+          }
+          recaptchaToken = await executeRecaptcha("register");
+        }
+
         await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
           name: form.name,
           email: form.email,
           password: form.password,
+          recaptchaToken,
         });
       }
 
@@ -189,6 +204,19 @@ function AuthPageInner() {
           <p className={styles.privacy}>
             Al continuar aceptas nuestras{" "}
             <a href="/privacy" target="_blank">Políticas de Privacidad</a>
+            {mode === "register" && (
+              <>
+                . Este sitio está protegido por reCAPTCHA y aplican la{" "}
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
+                  Política de Privacidad
+                </a>{" "}
+                y los{" "}
+                <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">
+                  Términos de Servicio
+                </a>{" "}
+                de Google.
+              </>
+            )}
           </p>
         </div>
       </div>
