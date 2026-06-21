@@ -1,5 +1,10 @@
 const prisma = require("../config/db");
 const { checkOrgAccess } = require("./organizationController");
+const {
+  notifyInterviewScheduled,
+  notifyInterviewUpdated,
+  notifyInterviewCancelled,
+} = require("../services/notificationService");
 
 // @route POST /api/organizations/:orgId/interviews
 const createInterview = async (req, res) => {
@@ -26,7 +31,20 @@ const createInterview = async (req, res) => {
         duration_minutes: duration_minutes || 30,
         notes_before,
       },
+      include: {
+        candidates: { select: { name: true } },
+        job_positions: { select: { title: true } },
+      },
     });
+
+    notifyInterviewScheduled({
+      interview,
+      orgId,
+      createdBy: req.user.id,
+      creatorName: req.user.name,
+      candidateName: interview.candidates?.name,
+      positionTitle: interview.job_positions?.title,
+    }).catch((err) => console.error("Error creando notificación de entrevista:", err.message));
 
     res.status(201).json({ success: true, interview });
   } catch (error) {
@@ -74,19 +92,54 @@ const updateInterview = async (req, res) => {
 
     const { scheduled_at, interview_type, interviewer_id, notes_before, feedback, evaluation_score, status } = req.body;
 
+    const existing = await prisma.interviews.findUnique({
+      where: { id: parseInt(interviewId) },
+      include: {
+        candidates: { select: { name: true } },
+        job_positions: { select: { title: true } },
+      },
+    });
+    if (!existing || existing.org_id !== parseInt(orgId)) {
+      return res.status(404).json({ success: false, message: "Entrevista no encontrada." });
+    }
+
     const data = {};
-    if (scheduled_at) data.scheduled_at = new Date(scheduled_at);
-    if (interview_type) data.interview_type = interview_type;
-    if (interviewer_id) data.interviewer_id = parseInt(interviewer_id);
+    const changes = [];
+    if (scheduled_at) {
+      data.scheduled_at = new Date(scheduled_at);
+      changes.push("la fecha");
+    }
+    if (interview_type) {
+      data.interview_type = interview_type;
+      changes.push("el tipo");
+    }
+    if (interviewer_id) {
+      data.interviewer_id = parseInt(interviewer_id);
+      changes.push("el entrevistador");
+    }
     if (notes_before !== undefined) data.notes_before = notes_before;
     if (feedback !== undefined) data.feedback = feedback;
     if (evaluation_score !== undefined) data.evaluation_score = evaluation_score;
-    if (status) data.status = status;
+    if (status) {
+      data.status = status;
+      changes.push("el estado");
+    }
 
     const interview = await prisma.interviews.update({
       where: { id: parseInt(interviewId) },
       data,
     });
+
+    if (changes.length > 0) {
+      notifyInterviewUpdated({
+        interview,
+        orgId,
+        updatedBy: req.user.id,
+        updaterName: req.user.name,
+        candidateName: existing.candidates?.name,
+        changes,
+      }).catch((err) => console.error("Error creando notificación de actualización:", err.message));
+    }
 
     res.status(200).json({ success: true, interview });
   } catch (error) {
@@ -102,7 +155,25 @@ const deleteInterview = async (req, res) => {
     const member = await checkOrgAccess(req.user.id, orgId, ["owner", "admin", "recruiter"]);
     if (!member) return res.status(403).json({ success: false, message: "No tienes acceso." });
 
+    const interview = await prisma.interviews.findUnique({
+      where: { id: parseInt(interviewId) },
+      include: { candidates: { select: { name: true } } },
+    });
+
+    if (!interview || interview.org_id !== parseInt(orgId)) {
+      return res.status(404).json({ success: false, message: "Entrevista no encontrada." });
+    }
+
     await prisma.interviews.delete({ where: { id: parseInt(interviewId) } });
+
+    notifyInterviewCancelled({
+      interview,
+      orgId,
+      deletedBy: req.user.id,
+      deleterName: req.user.name,
+      candidateName: interview.candidates?.name,
+    }).catch((err) => console.error("Error creando notificación de cancelación:", err.message));
+
     res.status(200).json({ success: true, message: "Entrevista eliminada." });
   } catch (error) {
     console.error("Error en deleteInterview:", error);

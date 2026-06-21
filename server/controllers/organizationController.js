@@ -1,4 +1,5 @@
 const prisma = require("../config/db");
+const { notifyTeamMemberAdded } = require("../services/notificationService");
 
 const checkOrgAccess = async (userId, orgId, allowedRoles = ["owner", "admin", "recruiter"]) => {
   const member = await prisma.org_members.findFirst({
@@ -93,6 +94,16 @@ const addMember = async (req, res) => {
     const newMember = await prisma.org_members.create({
       data: { org_id: parseInt(req.params.orgId), user_id: user.id, role: role || "recruiter" },
     });
+
+    notifyTeamMemberAdded({
+      orgId: req.params.orgId,
+      addedBy: req.user.id,
+      adderName: req.user.name,
+      memberName: user.name,
+      memberUserId: user.id,
+      role: role || "recruiter",
+    }).catch((err) => console.error("Error creando notificación de equipo:", err.message));
+
     res.status(201).json({ success: true, member: newMember });
   } catch (error) {
     console.error("Error en addMember:", error);

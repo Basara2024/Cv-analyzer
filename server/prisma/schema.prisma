@@ -7,32 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id             Int        @id @default(autoincrement())
-  name           String     @db.VarChar(50)
-  email          String     @unique @db.VarChar(100)
-  password       String?    @db.VarChar(255)
-  provider       String     @default("email") @db.VarChar(20)
-  provider_id    String?    @db.VarChar(255)
-  avatar_url     String?
-  role           String     @default("user") @db.VarChar(10)
-  analysis_count Int        @default(0)
-  analyses_limit Int        @default(1)
-  analyses_used  Int        @default(0)
-  plan           String     @default("free") @db.VarChar(20)
-  last_analysis  DateTime?  @db.Timestamptz(6)
-  last_analysis_at   DateTime? @db.Timestamptz(6)
-  free_blocked_until DateTime? @db.Timestamptz(6)
-  is_active      Boolean    @default(true)
-  created_at     DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
-  analyses       Analysis[]
-
-  @@index([email], map: "idx_users_email")
-  @@map("users")
-}
-
-model Analysis {
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model analyses {
   id                 Int      @id @default(autoincrement())
   user_id            Int
   file_name          String   @db.VarChar(255)
@@ -40,9 +16,265 @@ model Analysis {
   resumen            String
   resultado_json     Json
   created_at         DateTime @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  user               User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updated_at         DateTime @default(now()) @db.Timestamptz(6)
+  users              users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([user_id], map: "idx_analyses_user_id")
-  @@map("analyses")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model campaign_recipients {
+  id              Int             @id @default(autoincrement())
+  campaign_id     Int
+  candidate_id    Int
+  email           String          @db.VarChar(200)
+  status          String          @default("pending") @db.VarChar(20)
+  sent_at         DateTime?       @db.Timestamptz(6)
+  email_campaigns email_campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  candidates      candidates      @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([campaign_id, candidate_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model candidate_notes {
+  id           Int        @id @default(autoincrement())
+  candidate_id Int
+  author_id    Int
+  content      String
+  created_at   DateTime   @default(now()) @db.Timestamptz(6)
+  users        users      @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  candidates   candidates @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([candidate_id], map: "idx_candidate_notes_candidate")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model candidates {
+  id                  Int                   @id @default(autoincrement())
+  org_id              Int
+  job_position_id     Int?
+  uploaded_by         Int
+  name                String?               @db.VarChar(200)
+  email               String?               @db.VarChar(200)
+  file_name           String                @db.VarChar(255)
+  cv_text             String?
+  analysis_result     Json?
+  individual_score    Int?
+  ranking_score       Int?
+  status              String                @default("en_revision") @db.VarChar(20)
+  in_pool             Boolean               @default(false)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  campaign_recipients campaign_recipients[]
+  candidate_notes     candidate_notes[]
+  job_positions       job_positions?        @relation(fields: [job_position_id], references: [id], onUpdate: NoAction)
+  organizations       organizations         @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users               users                 @relation(fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  interviews          interviews[]
+
+  @@index([job_position_id], map: "idx_candidates_job")
+  @@index([org_id], map: "idx_candidates_org")
+  @@index([status], map: "idx_candidates_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model email_campaigns {
+  id                  Int                   @id @default(autoincrement())
+  org_id              Int
+  created_by          Int
+  job_position_id     Int?
+  subject             String                @db.VarChar(300)
+  body                String
+  status              String                @default("draft") @db.VarChar(20)
+  sent_at             DateTime?             @db.Timestamptz(6)
+  total_sent          Int?                  @default(0)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  campaign_recipients campaign_recipients[]
+  users               users                 @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  job_positions       job_positions?        @relation(fields: [job_position_id], references: [id], onUpdate: NoAction)
+  organizations       organizations         @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([org_id], map: "idx_email_campaigns_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model interviews {
+  id                                     Int            @id @default(autoincrement())
+  org_id                                 Int
+  candidate_id                           Int
+  job_position_id                        Int?
+  interviewer_id                         Int
+  created_by                             Int
+  interview_type                         String         @default("rh") @db.VarChar(20)
+  scheduled_at                           DateTime       @db.Timestamptz(6)
+  duration_minutes                       Int?           @default(30)
+  notes_before                           String?
+  feedback                               String?
+  evaluation_score                       Int?
+  status                                 String         @default("pendiente") @db.VarChar(20)
+  created_at                             DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime       @default(now()) @db.Timestamptz(6)
+  candidates                             candidates     @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_interviews_created_byTousers     users          @relation("interviews_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_interviews_interviewer_idTousers users          @relation("interviews_interviewer_idTousers", fields: [interviewer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  job_positions                          job_positions? @relation(fields: [job_position_id], references: [id], onUpdate: NoAction)
+  organizations                          organizations  @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([candidate_id], map: "idx_interviews_candidate")
+  @@index([interviewer_id], map: "idx_interviews_interviewer")
+  @@index([org_id], map: "idx_interviews_org")
+  @@index([scheduled_at], map: "idx_interviews_scheduled")
+  @@index([status], map: "idx_interviews_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model job_positions {
+  id              Int               @id @default(autoincrement())
+  org_id          Int
+  created_by      Int
+  title           String            @db.VarChar(200)
+  description     String
+  requirements    String?
+  salary_range    String?           @db.VarChar(100)
+  location        String?           @db.VarChar(100)
+  status          String            @default("active") @db.VarChar(20)
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime          @default(now()) @db.Timestamptz(6)
+  candidates      candidates[]
+  email_campaigns email_campaigns[]
+  interviews      interviews[]
+  users           users             @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations   organizations     @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([org_id], map: "idx_job_positions_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model org_members {
+  id            Int           @id @default(autoincrement())
+  org_id        Int
+  user_id       Int
+  role          String        @default("recruiter") @db.VarChar(20)
+  is_active     Boolean       @default(true)
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  organizations organizations @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([org_id, user_id])
+  @@index([org_id], map: "idx_org_members_org")
+  @@index([user_id], map: "idx_org_members_user")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model organizations {
+  id                Int               @id @default(autoincrement())
+  owner_id          Int
+  name              String            @db.VarChar(200)
+  slug              String            @unique @db.VarChar(100)
+  nit               String?           @db.VarChar(50)
+  economic_activity String?           @db.VarChar(200)
+  country           String?           @default("Colombia") @db.VarChar(100)
+  city              String?           @db.VarChar(100)
+  size              String?           @db.VarChar(50)
+  logo_url          String?
+  is_active         Boolean           @default(true)
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime          @default(now()) @db.Timestamptz(6)
+  candidates        candidates[]
+  email_campaigns   email_campaigns[]
+  interviews        interviews[]
+  job_positions     job_positions[]
+  org_members       org_members[]
+  notifications     notifications[]
+  users             users             @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([owner_id], map: "idx_organizations_owner")
+  @@index([slug], map: "idx_organizations_slug")
+}
+
+model password_reset_tokens {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @unique @db.VarChar(255)
+  expires_at DateTime @db.Timestamptz(6)
+  used       Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([token], map: "idx_reset_tokens_token")
+  @@index([user_id], map: "idx_reset_tokens_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  id                                          Int                     @id @default(autoincrement())
+  name                                        String                  @db.VarChar(50)
+  email                                       String                  @unique @db.VarChar(100)
+  password                                    String?                 @db.VarChar(255)
+  provider                                    String                  @default("email") @db.VarChar(20)
+  provider_id                                 String?                 @db.VarChar(255)
+  avatar_url                                  String?
+  role                                        String                  @default("user") @db.VarChar(10)
+  analysis_count                              Int                     @default(0)
+  last_analysis                               DateTime?               @db.Timestamptz(6)
+  is_active                                   Boolean                 @default(true)
+  created_at                                  DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime                @default(now()) @db.Timestamptz(6)
+  plan                                        String                  @default("free") @db.VarChar(20)
+  analyses_used                               Int                     @default(0)
+  analyses_limit                              Int                     @default(1)
+  last_analysis_at                            DateTime?               @db.Timestamptz(6)
+  free_blocked_until                          DateTime?               @db.Timestamptz(6)
+  analyses                                    analyses[]
+  candidate_notes                             candidate_notes[]
+  candidates                                  candidates[]
+  email_campaigns                             email_campaigns[]
+  interviews_interviews_created_byTousers     interviews[]            @relation("interviews_created_byTousers")
+  interviews_interviews_interviewer_idTousers interviews[]            @relation("interviews_interviewer_idTousers")
+  job_positions                               job_positions[]
+  notifications                               notifications[]
+  org_members                                 org_members[]
+  organizations                               organizations[]
+  password_reset_tokens                       password_reset_tokens[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([plan], map: "idx_users_plan")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model waitlist {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique @db.VarChar(100)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  name       String?  @db.VarChar(100)
+  interest   String?  @db.VarChar(20)
+
+  @@index([email], map: "idx_waitlist_email")
+}
+
+model notifications {
+  id            Int           @id @default(autoincrement())
+  org_id        Int
+  user_id       Int
+  type          String        @db.VarChar(50)
+  title         String        @db.VarChar(200)
+  message       String
+  link          String?       @db.VarChar(255)
+  metadata      Json?
+  is_read       Boolean       @default(false)
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  organizations organizations @relation(fields: [org_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([org_id], map: "idx_notifications_org")
+  @@index([user_id, is_read], map: "idx_notifications_user_read")
+  @@index([created_at(sort: Desc)], map: "idx_notifications_created")
 }

@@ -1,5 +1,6 @@
 const prisma = require("../config/db");
 const { checkOrgAccess } = require("./organizationController");
+const { notifyCampaignSent } = require("../services/notificationService");
 const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -140,6 +141,14 @@ const sendCampaign = async (req, res) => {
       where: { id: campaign.id },
       data: { status: "sent", sent_at: new Date(), total_sent: sentCount },
     });
+
+    notifyCampaignSent({
+      orgId,
+      sentBy: req.user.id,
+      senderName: req.user.name,
+      subject: campaign.subject,
+      sentCount,
+    }).catch((err) => console.error("Error creando notificación de campaña:", err.message));
 
     res.status(200).json({ success: true, sentCount, total: recipients.length });
   } catch (error) {

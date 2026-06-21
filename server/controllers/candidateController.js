@@ -2,6 +2,7 @@ const prisma = require("../config/db");
 const pdfParse = require("pdf-parse");
 const axios = require("axios");
 const { checkOrgAccess } = require("./organizationController");
+const { notifyCandidatesUploaded } = require("../services/notificationService");
 
 // Analizar un CV con Gemini
 const analyzeCV = async (cvText) => {
@@ -129,6 +130,16 @@ const bulkAnalyze = async (req, res) => {
       } catch (err) {
         console.error("Error en rankeo:", err.message);
       }
+    }
+
+    if (analyzedCandidates.length > 0) {
+      notifyCandidatesUploaded({
+        orgId,
+        uploadedBy: req.user.id,
+        uploaderName: req.user.name,
+        count: analyzedCandidates.length,
+        positionTitle: jobDescription ? jobDescription.split(":")[0] : null,
+      }).catch((err) => console.error("Error creando notificación de candidatos:", err.message));
     }
 
     res.status(200).json({ success: true, candidates: analyzedCandidates, total: analyzedCandidates.length });

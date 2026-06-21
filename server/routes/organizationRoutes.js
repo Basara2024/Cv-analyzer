@@ -14,6 +14,11 @@ const {
 } = require("../controllers/jobPositionController");
 const { bulkAnalyze, getCandidates, updateCandidate, addNote, getPool, addToPosition } = require("../controllers/candidateController");
 const { createCampaign, sendCampaign, getCampaigns, getSuggestedCandidates } = require("../controllers/campaignController");
+const {
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+} = require("../controllers/notificationController");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -55,6 +60,11 @@ router.get("/:orgId/campaigns", protect, getCampaigns);
 router.post("/:orgId/campaigns", protect, createCampaign);
 router.post("/:orgId/campaigns/:campaignId/send", protect, sendCampaign);
 router.get("/:orgId/campaigns/suggested-candidates", protect, getSuggestedCandidates);
+
+// Notificaciones
+router.get("/:orgId/notifications", protect, getNotifications);
+router.put("/:orgId/notifications/read-all", protect, markAllNotificationsRead);
+router.put("/:orgId/notifications/:notificationId/read", protect, markNotificationRead);
 
 // Reportes
 router.get("/:orgId/reports", protect, getReports);
