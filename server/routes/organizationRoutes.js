@@ -3,6 +3,9 @@ const router = express.Router();
 const multer = require("multer");
 const { protect } = require("../middleware/authMiddleware");
 const { getReports } = require("../controllers/reportController");
+const { updateOrganization } = require("../controllers/settingsController");
+
+
 const {
   createOrganization, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole
 } = require("../controllers/organizationController");
@@ -55,5 +58,9 @@ router.get("/:orgId/campaigns/suggested-candidates", protect, getSuggestedCandid
 
 // Reportes
 router.get("/:orgId/reports", protect, getReports);
+
+// Configuración de empresa
+router.put("/:orgId/settings", protect, updateOrganization);
+
 
 module.exports = router;
