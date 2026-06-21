@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
 import NotificationBell from "./NotificationBell";
+import Spinner from "@/app/components/Spinner";
 import styles from "./BusinessLayout.module.css";
 
 interface Organization {
@@ -139,7 +140,7 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
   if (status === "loading") {
     return (
       <div className={styles.loadingScreen}>
-        <div className={styles.loadingSpinner} />
+        <Spinner variant="layout" />
       </div>
     );
   }

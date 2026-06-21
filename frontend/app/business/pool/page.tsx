@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./pool.module.css";
 
 interface Position {
@@ -101,7 +102,7 @@ export default function PoolPage() {
   if (loading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <Spinner variant="page" />
         <p>Cargando pool de talento...</p>
       </div>
     );
@@ -291,7 +292,7 @@ export default function PoolPage() {
               <div className={styles.modalFooter}>
                 <button className={styles.cancelBtn} onClick={() => setShowAddModal(false)}>Cancelar</button>
                 <button className={styles.submitBtn} disabled={!targetPosition || moving} onClick={handleAddToPosition}>
-                  {moving ? <span className={styles.btnSpinner} /> : "Confirmar"}
+                  {moving ? <Spinner variant="button" /> : "Confirmar"}
                 </button>
               </div>
             </div>

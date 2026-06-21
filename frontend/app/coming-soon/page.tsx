@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import styles from "./coming-soon.module.css";
+import Spinner from "@/app/components/Spinner";
 
 const features = [
   {
@@ -162,7 +163,7 @@ export default function ComingSoonPage() {
                   <option value="empresarial">Empresarial — Quiero analizar candidatos</option>
                 </select>
                 <button className={styles.btn} type="submit" disabled={loading}>
-                  {loading ? <span className={styles.spinner} /> : "Notifícame"}
+                  {loading ? <Spinner variant="auth" /> : "Notifícame"}
                 </button>
               </form>
               {error && <p className={styles.error}>{error}</p>}

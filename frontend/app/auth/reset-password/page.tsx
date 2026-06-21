@@ -5,6 +5,7 @@ import Link from "next/link";
 import axios from "axios";
 import styles from "../auth.module.css";
 import { MatchiaLogo } from "@/app/components/MatchiaLogo";
+import Spinner from "@/app/components/Spinner";
 
 function ResetPasswordInner() {
   const searchParams = useSearchParams();
@@ -105,7 +106,7 @@ function ResetPasswordInner() {
               {error && <div className={styles.error}>{error}</div>}
 
               <button className={styles.btnPrimary} type="submit" disabled={loading}>
-                {loading ? <span className={styles.spinner} /> : "Restablecer contraseña →"}
+                {loading ? <Spinner variant="auth" /> : "Restablecer contraseña →"}
               </button>
             </form>
           ) : null}

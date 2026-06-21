@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import CVItem from "./CVItem";
+import Spinner from "@/app/components/Spinner";
 import styles from "./CVHistory.module.css";
 
 interface HistoryItem {
@@ -49,8 +50,7 @@ export default function CVHistory({ onSelect, refreshTrigger }: CVHistoryProps) 
   if (loading) {
     return (
       <div className={styles.loading}>
-        <span className={styles.spinner} />
-        Cargando historial...
+        <Spinner variant="inline" />
       </div>
     );
   }

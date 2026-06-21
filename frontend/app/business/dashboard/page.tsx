@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./dashboard.module.css";
 
 interface KPI {
@@ -154,7 +155,7 @@ export default function BusinessDashboard() {
   if (loading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.loadingSpinner} />
+        <Spinner variant="page" />
         <p>Cargando dashboard...</p>
       </div>
     );

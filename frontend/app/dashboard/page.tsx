@@ -7,6 +7,7 @@ import CVHistory from "./components/CVHistory";
 import AnalysisLimitBanner from "./components/AnalysisLimitBanner";
 import styles from "./dashboard.module.css";
 import { MatchiaLogo } from "@/app/components/MatchiaLogo";
+import Spinner from "@/app/components/Spinner";
 
 interface Category {
   puntuacion: number;
@@ -245,7 +246,7 @@ export default function Dashboard() {
             >
               {loading ? (
                 <span className={styles.loadingRow}>
-                  <span className={styles.spinner} /> Analizando tu CV...
+                  <Spinner variant="auth" /> Analizando tu CV...
                 </span>
               ) : !canAnalyze ? "Análisis agotados — Actualiza a Pro"
                 : file ? "Analizar CV →" : "Sube un PDF para continuar"}

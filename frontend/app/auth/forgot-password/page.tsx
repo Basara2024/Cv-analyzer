@@ -4,6 +4,7 @@ import Link from "next/link";
 import axios from "axios";
 import styles from "../auth.module.css";
 import { MatchiaLogo } from "@/app/components/MatchiaLogo";
+import Spinner from "@/app/components/Spinner";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -63,7 +64,7 @@ export default function ForgotPasswordPage() {
               {error && <div className={styles.error}>{error}</div>}
 
               <button className={styles.btnPrimary} type="submit" disabled={loading}>
-                {loading ? <span className={styles.spinner} /> : "Enviar enlace →"}
+                {loading ? <Spinner variant="auth" /> : "Enviar enlace →"}
               </button>
             </form>
           ) : (

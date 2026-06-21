@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./interviews.module.css";
 
 interface Candidate {
@@ -196,7 +197,7 @@ export default function InterviewsPage() {
   if (loading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <Spinner variant="page" />
         <p>Cargando entrevistas...</p>
       </div>
     );
@@ -455,7 +456,7 @@ export default function InterviewsPage() {
               <div className={styles.modalFooter}>
                 <button type="button" className={styles.cancelBtn} onClick={() => setShowModal(false)}>Cancelar</button>
                 <button type="submit" className={styles.submitBtn} disabled={submitting}>
-                  {submitting ? <span className={styles.btnSpinner} /> : "Agendar entrevista"}
+                  {submitting ? <Spinner variant="button" /> : "Agendar entrevista"}
                 </button>
               </div>
             </form>
@@ -569,7 +570,7 @@ export default function InterviewsPage() {
                 <div className={styles.modalFooter}>
                   <button type="button" className={styles.cancelBtn} onClick={() => setShowFeedbackModal(false)}>Cerrar</button>
                   <button type="submit" className={styles.submitBtn} disabled={savingFeedback}>
-                    {savingFeedback ? <span className={styles.btnSpinner} /> : "Guardar feedback"}
+                    {savingFeedback ? <Spinner variant="button" /> : "Guardar feedback"}
                   </button>
                 </div>
               </form>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./positions.module.css";
 import { exportPositionToPDF, exportPositionToText } from "./exportPosition";
 
@@ -140,7 +141,7 @@ export default function PositionsPage() {
   if (loading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <Spinner variant="page" />
         <p>Cargando puestos...</p>
       </div>
     );
@@ -361,7 +362,7 @@ export default function PositionsPage() {
                   Cancelar
                 </button>
                 <button type="submit" className={styles.submitBtn} disabled={submitting}>
-                  {submitting ? <span className={styles.btnSpinner} /> : editingPosition ? "Guardar cambios" : "Crear vacante"}
+                  {submitting ? <Spinner variant="button" /> : editingPosition ? "Guardar cambios" : "Crear vacante"}
                 </button>
               </div>
             </form>

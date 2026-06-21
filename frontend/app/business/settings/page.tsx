@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./settings.module.css";
 
 interface Organization {
@@ -106,7 +107,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <Spinner variant="page" />
         <p>Cargando configuración...</p>
       </div>
     );
@@ -223,7 +224,7 @@ export default function SettingsPage() {
 
             {canEditCompany && (
               <button type="submit" className={styles.submitBtn} disabled={savingCompany}>
-                {savingCompany ? <span className={styles.btnSpinner} /> : "Guardar cambios"}
+                {savingCompany ? <Spinner variant="button" /> : "Guardar cambios"}
               </button>
             )}
           </form>
@@ -277,7 +278,7 @@ export default function SettingsPage() {
             )}
 
             <button type="submit" className={styles.submitBtn} disabled={savingPassword}>
-              {savingPassword ? <span className={styles.btnSpinner} /> : "Actualizar contraseña"}
+              {savingPassword ? <Spinner variant="button" /> : "Actualizar contraseña"}
             </button>
           </form>
         </div>

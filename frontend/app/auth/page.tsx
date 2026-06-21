@@ -7,6 +7,7 @@ import axios from "axios";
 import { RECAPTCHA_ENABLED, useRecaptchaToken } from "@/lib/recaptcha";
 import styles from "./auth.module.css";
 import { MatchiaLogo } from "@/app/components/MatchiaLogo";
+import Spinner from "@/app/components/Spinner";
 
 function AuthPageInner() {
   const router = useRouter();
@@ -204,7 +205,7 @@ function AuthPageInner() {
               disabled={loading || registerBlockedByRecaptcha}
             >
               {loading ? (
-                <span className={styles.spinner} />
+                <Spinner variant="auth" />
               ) : registerBlockedByRecaptcha ? (
                 "Preparando verificación..."
               ) : mode === "login" ? (

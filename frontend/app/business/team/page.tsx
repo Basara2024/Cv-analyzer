@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./team.module.css";
 
 interface Member {
@@ -109,7 +110,7 @@ export default function TeamPage() {
   if (loading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <Spinner variant="page" />
         <p>Cargando equipo...</p>
       </div>
     );
@@ -252,7 +253,7 @@ export default function TeamPage() {
               <div className={styles.modalFooter}>
                 <button type="button" className={styles.cancelBtn} onClick={() => setShowAddModal(false)}>Cancelar</button>
                 <button type="submit" className={styles.submitBtn} disabled={submitting}>
-                  {submitting ? <span className={styles.btnSpinner} /> : "Agregar"}
+                  {submitting ? <Spinner variant="button" /> : "Agregar"}
                 </button>
               </div>
             </form>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./reports.module.css";
 
 interface Report {
@@ -65,7 +66,7 @@ export default function ReportsPage() {
   if (loading || !report) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <Spinner variant="page" />
         <p>Generando reporte...</p>
       </div>
     );

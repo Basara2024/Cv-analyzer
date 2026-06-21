@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./NotificationBell.module.css";
 
 interface Notification {
@@ -142,7 +143,9 @@ export default function NotificationBell({ orgId }: { orgId: number | null }) {
 
           <div className={styles.list}>
             {loading ? (
-              <div className={styles.empty}>Cargando...</div>
+              <div className={styles.empty}>
+                <Spinner variant="inline" /> Cargando...
+              </div>
             ) : notifications.length === 0 ? (
               <div className={styles.empty}>
                 <span className={styles.emptyIcon}>🔔</span>

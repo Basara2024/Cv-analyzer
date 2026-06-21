@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./campaigns.module.css";
 
 interface Position {
@@ -145,7 +146,7 @@ export default function CampaignsPage() {
   if (loading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <Spinner variant="page" />
         <p>Cargando campañas...</p>
       </div>
     );
@@ -312,7 +313,7 @@ export default function CampaignsPage() {
                   <div className={styles.modalFooter}>
                     <button className={styles.cancelBtn} onClick={() => setStep(2)}>Atrás</button>
                     <button className={styles.submitBtn} onClick={handleCreateAndSend} disabled={creating}>
-                      {creating ? <span className={styles.btnSpinner} /> : `Enviar a ${selectedCandidates.length} candidatos`}
+                      {creating ? <Spinner variant="button" /> : `Enviar a ${selectedCandidates.length} candidatos`}
                     </button>
                   </div>
                 </>

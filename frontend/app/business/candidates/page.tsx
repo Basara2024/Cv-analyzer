@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import api from "@/lib/api";
+import Spinner from "@/app/components/Spinner";
 import styles from "./candidates.module.css";
 
 interface Position {
@@ -170,7 +171,7 @@ export default function CandidatesPage() {
   if (loading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <Spinner variant="page" />
         <p>Cargando candidatos...</p>
       </div>
     );
@@ -379,7 +380,7 @@ export default function CandidatesPage() {
                 </>
               ) : (
                 <div className={styles.analyzingState}>
-                  <div className={styles.bigSpinner} />
+                  <Spinner variant="large" />
                   <p className={styles.analyzingText}>{analyzeProgress}</p>
                   <p className={styles.analyzingHint}>Esto puede tardar uno o dos minutos según la cantidad de CVs.</p>
                 </div>
@@ -508,7 +509,7 @@ export default function CandidatesPage() {
                     onClick={handleAddNote}
                     disabled={!noteContent.trim() || savingNote}
                   >
-                    {savingNote ? <span className={styles.btnSpinner} /> : "Agregar"}
+                    {savingNote ? <Spinner variant="button" /> : "Agregar"}
                   </button>
                 </div>
               </div>
