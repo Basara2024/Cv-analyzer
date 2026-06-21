@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { RECAPTCHA_ENABLED, useRecaptchaToken } from "@/lib/recaptcha";
 import styles from "./auth.module.css";
 import { MatchiaLogo } from "@/app/components/MatchiaLogo";
 
@@ -18,7 +18,10 @@ function AuthPageInner() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { executeRecaptcha } = useGoogleReCaptcha();
+  const { ready: recaptchaReady, getToken: getRecaptchaToken } = useRecaptchaToken();
+
+  const registerBlockedByRecaptcha =
+    mode === "register" && RECAPTCHA_ENABLED && !recaptchaReady;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,16 +30,10 @@ function AuthPageInner() {
 
     try {
       if (mode === "register") {
-        const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
         let recaptchaToken = "";
 
-        if (siteKey) {
-          if (!executeRecaptcha) {
-            setError("Verificación anti-bot no disponible. Recarga la página e intenta de nuevo.");
-            setLoading(false);
-            return;
-          }
-          recaptchaToken = await executeRecaptcha("register");
+        if (RECAPTCHA_ENABLED) {
+          recaptchaToken = await getRecaptchaToken("register");
         }
 
         await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
@@ -58,8 +55,14 @@ function AuthPageInner() {
       } else {
         router.push("/dashboard");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Error. Intenta de nuevo.");
+    } catch (err: unknown) {
+      let message = "Error. Intenta de nuevo.";
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.message || message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -186,8 +189,20 @@ function AuthPageInner() {
 
             {error && <div className={styles.error}>{error}</div>}
 
-            <button className={styles.btnPrimary} type="submit" disabled={loading}>
-              {loading ? <span className={styles.spinner} /> : mode === "login" ? "Entrar →" : "Crear cuenta →"}
+            <button
+              className={styles.btnPrimary}
+              type="submit"
+              disabled={loading || registerBlockedByRecaptcha}
+            >
+              {loading ? (
+                <span className={styles.spinner} />
+              ) : registerBlockedByRecaptcha ? (
+                "Preparando verificación..."
+              ) : mode === "login" ? (
+                "Entrar →"
+              ) : (
+                "Crear cuenta →"
+              )}
             </button>
           </form>
 

@@ -257,4 +257,8 @@
 .forgotLink:hover {
   color: var(--accent-bright);
 }
- 
+
+/* Badge v3: oculto porque el aviso legal está en .privacy (requerido por Google) */
+.page :global(.grecaptcha-badge) {
+  visibility: hidden;
+}
