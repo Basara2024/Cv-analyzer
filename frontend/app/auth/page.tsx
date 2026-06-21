@@ -51,14 +51,23 @@ function AuthPageInner() {
       });
 
       if (res?.error) {
-        setError("Credenciales incorrectas.");
+        setError(
+          mode === "register"
+            ? "Cuenta creada, pero no pudimos iniciar sesión automáticamente. Prueba entrar manualmente."
+            : "Credenciales incorrectas."
+        );
       } else {
         router.push("/dashboard");
       }
     } catch (err: unknown) {
       let message = "Error. Intenta de nuevo.";
       if (axios.isAxiosError(err)) {
-        message = err.response?.data?.message || message;
+        if (!err.response) {
+          message =
+            "No se pudo conectar con el servidor. Si estás en matchia.co, la API debe usar HTTPS o el proxy /api/backend.";
+        } else {
+          message = err.response.data?.message || message;
+        }
       } else if (err instanceof Error) {
         message = err.message;
       }
