@@ -26,7 +26,7 @@ const createOrganization = async (req, res) => {
       data: { org_id: org.id, user_id: req.user.id, role: "owner" },
     });
 
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: req.user.id },
       data: { plan: "business" },
     });
@@ -76,12 +76,12 @@ const addMember = async (req, res) => {
     const { name, email, role } = req.body;
     if (!name || !email) return res.status(400).json({ success: false, message: "Nombre y email son obligatorios." });
 
-    let user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    let user = await prisma.users.findUnique({ where: { email: email.toLowerCase() } });
     if (!user) {
       const bcrypt = require("bcryptjs");
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashed = await bcrypt.hash(tempPassword, 12);
-      user = await prisma.user.create({
+      user = await prisma.users.create({
         data: { name, email: email.toLowerCase(), password: hashed, provider: "email" },
       });
     }

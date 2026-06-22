@@ -101,7 +101,7 @@ const webhook = async (req, res) => {
         });
 
         if (newStatus === "approved") {
-          await prisma.user.update({
+          await prisma.users.update({
             where: { id: subscription.user_id },
             data: { plan: "business" },
           });

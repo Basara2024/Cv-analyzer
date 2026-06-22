@@ -40,7 +40,7 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "Ingresa tu correo electrónico." });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    const user = await prisma.users.findUnique({ where: { email: email.toLowerCase() } });
 
     // Respuesta genérica siempre — no revelar si el email existe o no (seguridad)
     const genericResponse = {
@@ -97,7 +97,7 @@ const resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: resetToken.user_id },
       data: { password: hashedPassword },
     });

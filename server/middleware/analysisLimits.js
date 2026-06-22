@@ -22,7 +22,7 @@ const IP_WINDOW_MS = 60 * 60 * 1000;
 
 const checkAnalysisLimit = async (req, res, next) => {
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id: req.user.id },
     });
 
@@ -67,7 +67,7 @@ const checkAnalysisLimit = async (req, res, next) => {
     const limit = LIMITS[user.provider] || LIMITS.email;
     if (user.analyses_used >= limit) {
       // Bloquear por 24 horas
-      await prisma.user.update({
+      await prisma.users.update({
         where: { id: user.id },
         data: { free_blocked_until: new Date(now + BLOCK_DURATION_MS) },
       });
