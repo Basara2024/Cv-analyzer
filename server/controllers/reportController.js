@@ -76,7 +76,7 @@ const getReports = async (req, res) => {
 
     const uploaderIds = Object.keys(recruiterStats).map((id) => parseInt(id));
     const recruiterUsers = uploaderIds.length > 0
-      ? await prisma.user.findMany({ where: { id: { in: uploaderIds } }, select: { id: true, name: true } })
+      ? await prisma.users.findMany({ where: { id: { in: uploaderIds } }, select: { id: true, name: true } })
       : [];
 
     const recruiterPerformance = recruiterUsers.map((u) => ({

@@ -48,7 +48,7 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: "La contraseña debe tener al menos 6 caracteres." });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    const existing = await prisma.users.findUnique({ where: { email: email.toLowerCase() } });
     if (existing) {
       return res.status(409).json({ success: false, message: "Ya existe una cuenta con este email." });
     }
@@ -56,7 +56,7 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
         name,
         email: email.toLowerCase(),
@@ -82,7 +82,7 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Por favor ingresa email y contraseña." });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    const user = await prisma.users.findUnique({ where: { email: email.toLowerCase() } });
 
     if (!user || !user.password) {
       return res.status(401).json({ success: false, message: "Credenciales incorrectas." });
@@ -113,7 +113,7 @@ const socialLogin = async (req, res) => {
       return res.status(400).json({ success: false, message: "Datos del proveedor incompletos." });
     }
 
-    let user = await prisma.user.findFirst({
+    let user = await prisma.users.findFirst({
       where: {
         OR: [
           { provider_id: String(provider_id) },
@@ -123,7 +123,7 @@ const socialLogin = async (req, res) => {
     });
 
 if (!user) {
-  user = await prisma.user.create({
+  user = await prisma.users.create({
     data: {
       name: name || "Usuario",
       email: email?.toLowerCase() || `${provider_id}@${provider}.com`,
@@ -134,7 +134,7 @@ if (!user) {
     },
   });
 } else {
-  user = await prisma.user.update({
+  user = await prisma.users.update({
     where: { id: user.id },
     data: {
       avatar_url,
@@ -159,7 +159,7 @@ if (!user) {
 // @route GET /api/auth/me
 const getMe = async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const user = await prisma.users.findUnique({ where: { id: req.user.id } });
     res.status(200).json({
       success: true,
       user: {
@@ -185,7 +185,7 @@ const getMe = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { name } = req.body;
-    const user = await prisma.user.update({
+    const user = await prisma.users.update({
       where: { id: req.user.id },
       data: { name },
     });

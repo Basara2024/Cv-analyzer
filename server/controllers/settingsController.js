@@ -46,7 +46,7 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "La nueva contraseña debe tener al menos 6 caracteres." });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const user = await prisma.users.findUnique({ where: { id: req.user.id } });
 
     if (!user.password) {
       return res.status(400).json({
@@ -63,7 +63,7 @@ const changePassword = async (req, res) => {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: req.user.id },
       data: { password: hashedPassword },
     });

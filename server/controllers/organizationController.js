@@ -14,6 +14,23 @@ const createOrganization = async (req, res) => {
     const { name, nit, economic_activity, country, city, size } = req.body;
     if (!name) return res.status(400).json({ success: false, message: "El nombre es obligatorio." });
 
+    // Verificar que exista una suscripción Business aprobada
+    const approvedSubscription = await prisma.subscriptions.findFirst({
+      where: {
+        user_id: req.user.id,
+        status: "approved",
+        plan: { in: ["business_monthly", "business_yearly"] },
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    if (!approvedSubscription) {
+      return res.status(403).json({
+        success: false,
+        message: "No encontramos un pago aprobado del plan Business. Completa el pago antes de registrar tu empresa.",
+      });
+    }
+
     const baseSlug = name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").slice(0, 50);
     const existing = await prisma.organizations.findUnique({ where: { slug: baseSlug } });
     const slug = existing ? `${baseSlug}-${Date.now()}` : baseSlug;
@@ -26,7 +43,7 @@ const createOrganization = async (req, res) => {
       data: { org_id: org.id, user_id: req.user.id, role: "owner" },
     });
 
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: req.user.id },
       data: { plan: "business" },
     });
@@ -34,6 +51,39 @@ const createOrganization = async (req, res) => {
     res.status(201).json({ success: true, organization: org });
   } catch (error) {
     console.error("Error en createOrganization:", error);
+    res.status(500).json({ success: false, message: "Error interno del servidor." });
+  }
+};
+
+// @route GET /api/organizations/can-onboard
+// El frontend usa esto para saber si debe mostrar el onboarding o redirigir
+const canOnboard = async (req, res) => {
+  try {
+    // ¿Ya tiene organización?
+    const existingMember = await prisma.org_members.findFirst({
+      where: { user_id: req.user.id, is_active: true },
+    });
+    if (existingMember) {
+      return res.status(200).json({ success: true, canOnboard: false, reason: "already_has_org" });
+    }
+
+    // ¿Tiene un pago aprobado pendiente de usar?
+    const approvedSubscription = await prisma.subscriptions.findFirst({
+      where: {
+        user_id: req.user.id,
+        status: "approved",
+        plan: { in: ["business_monthly", "business_yearly"] },
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    if (!approvedSubscription) {
+      return res.status(200).json({ success: true, canOnboard: false, reason: "no_approved_payment" });
+    }
+
+    res.status(200).json({ success: true, canOnboard: true, subscription: approvedSubscription });
+  } catch (error) {
+    console.error("Error en canOnboard:", error);
     res.status(500).json({ success: false, message: "Error interno del servidor." });
   }
 };
@@ -76,12 +126,12 @@ const addMember = async (req, res) => {
     const { name, email, role } = req.body;
     if (!name || !email) return res.status(400).json({ success: false, message: "Nombre y email son obligatorios." });
 
-    let user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    let user = await prisma.users.findUnique({ where: { email: email.toLowerCase() } });
     if (!user) {
       const bcrypt = require("bcryptjs");
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashed = await bcrypt.hash(tempPassword, 12);
-      user = await prisma.user.create({
+      user = await prisma.users.create({
         data: { name, email: email.toLowerCase(), password: hashed, provider: "email" },
       });
     }
@@ -137,7 +187,6 @@ const updateMemberRole = async (req, res) => {
       return res.status(400).json({ success: false, message: "Rol inválido." });
     }
 
-    // Evitar que alguien se quite a sí mismo el último acceso de admin/owner
     const targetMember = await prisma.org_members.findFirst({
       where: { org_id: parseInt(req.params.orgId), user_id: parseInt(req.params.userId) },
     });
@@ -157,4 +206,13 @@ const updateMemberRole = async (req, res) => {
   }
 };
 
-module.exports = { createOrganization, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole, checkOrgAccess };
+module.exports = {
+  createOrganization,
+  canOnboard,
+  getMyOrganization,
+  getMembers,
+  addMember,
+  removeMember,
+  updateMemberRole,
+  checkOrgAccess,
+};

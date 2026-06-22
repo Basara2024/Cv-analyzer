@@ -32,7 +32,7 @@ const analyzeCV = async (req, res) => {
     });
 
     // Actualizar contadores
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: req.user.id },
       data: {
         analysis_count: { increment: 1 },
@@ -118,7 +118,7 @@ const deleteAnalysis = async (req, res) => {
 
     await prisma.analysis.delete({ where: { id: parseInt(req.params.id) } });
 
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: req.user.id },
       data: { analysis_count: { decrement: 1 } },
     });

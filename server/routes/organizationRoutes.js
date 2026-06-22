@@ -5,9 +5,8 @@ const { protect } = require("../middleware/authMiddleware");
 const { getReports } = require("../controllers/reportController");
 const { updateOrganization } = require("../controllers/settingsController");
 
-
 const {
-  createOrganization, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole
+  createOrganization, canOnboard, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole
 } = require("../controllers/organizationController");
 const {
   createJobPosition, getJobPositions, updateJobPosition, deleteJobPosition
@@ -31,6 +30,7 @@ const upload = multer({
 
 // Organización
 router.post("/", protect, createOrganization);
+router.get("/can-onboard", protect, canOnboard);
 router.get("/my", protect, getMyOrganization);
 
 // Miembros
@@ -71,6 +71,5 @@ router.get("/:orgId/reports", protect, getReports);
 
 // Configuración de empresa
 router.put("/:orgId/settings", protect, updateOrganization);
-
 
 module.exports = router;

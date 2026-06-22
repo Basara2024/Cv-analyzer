@@ -1,0 +1,249 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: var(--bg-base);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  max-width: 540px;
+  width: 100%;
+  box-shadow: 0 24px 80px #00000044;
+}
+
+/* Progress steps */
+.progressSteps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.stepDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepDotActive {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.stepLine {
+  width: 32px;
+  height: 1px;
+  background: var(--border);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 0.4rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.9rem;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  outline: none;
+  transition: all var(--transition);
+}
+
+.input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px #2563eb18; }
+
+.errorBox {
+  background: var(--red-dim);
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-size: 0.82rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+}
+
+.primaryBtn {
+  background: #2563eb;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  width: 100%;
+}
+
+.primaryBtn:hover:not(:disabled) { background: #1d4ed8; }
+.primaryBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btnSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff44;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Team step */
+.teamAddRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 110px 36px;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.addBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.addBtn:hover { background: #1d4ed8; }
+
+.draftList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.draftItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.draftItem button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.draftItem button:hover { color: var(--red); }
+
+.stepActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.skipBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.skipBtn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+/* Confirmation */
+.successIcon {
+  width: 64px;
+  height: 64px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 2px solid var(--green);
+  border-radius: 50%;
+  font-size: 1.8rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 560px) {
+  .card { padding: 1.75rem; }
+  .formRow { grid-template-columns: 1fr; }
+  .teamAddRow { grid-template-columns: 1fr; }
+  .stepActions { flex-direction: column-reverse; }
+}
