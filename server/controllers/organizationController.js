@@ -14,6 +14,23 @@ const createOrganization = async (req, res) => {
     const { name, nit, economic_activity, country, city, size } = req.body;
     if (!name) return res.status(400).json({ success: false, message: "El nombre es obligatorio." });
 
+    // Verificar que exista una suscripción Business aprobada
+    const approvedSubscription = await prisma.subscriptions.findFirst({
+      where: {
+        user_id: req.user.id,
+        status: "approved",
+        plan: { in: ["business_monthly", "business_yearly"] },
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    if (!approvedSubscription) {
+      return res.status(403).json({
+        success: false,
+        message: "No encontramos un pago aprobado del plan Business. Completa el pago antes de registrar tu empresa.",
+      });
+    }
+
     const baseSlug = name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").slice(0, 50);
     const existing = await prisma.organizations.findUnique({ where: { slug: baseSlug } });
     const slug = existing ? `${baseSlug}-${Date.now()}` : baseSlug;
@@ -34,6 +51,39 @@ const createOrganization = async (req, res) => {
     res.status(201).json({ success: true, organization: org });
   } catch (error) {
     console.error("Error en createOrganization:", error);
+    res.status(500).json({ success: false, message: "Error interno del servidor." });
+  }
+};
+
+// @route GET /api/organizations/can-onboard
+// El frontend usa esto para saber si debe mostrar el onboarding o redirigir
+const canOnboard = async (req, res) => {
+  try {
+    // ¿Ya tiene organización?
+    const existingMember = await prisma.org_members.findFirst({
+      where: { user_id: req.user.id, is_active: true },
+    });
+    if (existingMember) {
+      return res.status(200).json({ success: true, canOnboard: false, reason: "already_has_org" });
+    }
+
+    // ¿Tiene un pago aprobado pendiente de usar?
+    const approvedSubscription = await prisma.subscriptions.findFirst({
+      where: {
+        user_id: req.user.id,
+        status: "approved",
+        plan: { in: ["business_monthly", "business_yearly"] },
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    if (!approvedSubscription) {
+      return res.status(200).json({ success: true, canOnboard: false, reason: "no_approved_payment" });
+    }
+
+    res.status(200).json({ success: true, canOnboard: true, subscription: approvedSubscription });
+  } catch (error) {
+    console.error("Error en canOnboard:", error);
     res.status(500).json({ success: false, message: "Error interno del servidor." });
   }
 };
@@ -137,7 +187,6 @@ const updateMemberRole = async (req, res) => {
       return res.status(400).json({ success: false, message: "Rol inválido." });
     }
 
-    // Evitar que alguien se quite a sí mismo el último acceso de admin/owner
     const targetMember = await prisma.org_members.findFirst({
       where: { org_id: parseInt(req.params.orgId), user_id: parseInt(req.params.userId) },
     });
@@ -157,4 +206,13 @@ const updateMemberRole = async (req, res) => {
   }
 };
 
-module.exports = { createOrganization, getMyOrganization, getMembers, addMember, removeMember, updateMemberRole, checkOrgAccess };
+module.exports = {
+  createOrganization,
+  canOnboard,
+  getMyOrganization,
+  getMembers,
+  addMember,
+  removeMember,
+  updateMemberRole,
+  checkOrgAccess,
+};
