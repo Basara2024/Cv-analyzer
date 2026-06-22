@@ -1,12 +1,22 @@
 const { MercadoPagoConfig, Preference, Payment } = require("mercadopago");
 const prisma = require("../config/db");
 
-const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN });
+const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN || "";
+const isTestMode = accessToken.startsWith("TEST-");
+const client = new MercadoPagoConfig({ accessToken });
 
+// Cuenta MP Colombia: el checkout procesa en COP (no USD).
 const PLAN_PRICES = {
-  business_monthly: { amount: 30, currency: "USD", title: "Matchia Business — Mensual" },
-  business_yearly: { amount: 300, currency: "USD", title: "Matchia Business — Anual" },
+  business_monthly: { amount: 120000, currency: "COP", title: "Matchia Business — Mensual" },
+  business_yearly: { amount: 1200000, currency: "COP", title: "Matchia Business — Anual" },
 };
+
+function getCheckoutUrl(preference) {
+  if (isTestMode) {
+    return preference.sandbox_init_point || preference.init_point;
+  }
+  return preference.init_point;
+}
 
 // @route POST /api/payments/create-preference
 // Crea la preferencia de pago para el plan Business
@@ -42,13 +52,14 @@ const createPreference = async (req, res) => {
           },
         ],
         external_reference: String(subscription.id),
+        payer: { email: req.user.email },
         back_urls: {
-          success: `${process.env.CLIENT_URL}/business/onboarding?status=success`,
+          success: `${process.env.CLIENT_URL}/business/dashboard?payment=success`,
           failure: `${process.env.CLIENT_URL}/dashboard?reopen_plan_modal=true&status=failed`,
           pending: `${process.env.CLIENT_URL}/dashboard?reopen_plan_modal=true&status=pending`,
         },
         auto_return: "approved",
-        notification_url: `${process.env.SERVER_URL}/api/payments/webhook`,
+        notification_url: `${process.env.SERVER_URL || process.env.CLIENT_URL}/api/payments/webhook`,
       },
     });
 
@@ -57,7 +68,17 @@ const createPreference = async (req, res) => {
       data: { mp_preference_id: result.id },
     });
 
-    res.status(200).json({ success: true, preferenceId: result.id, initPoint: result.init_point });
+    const checkoutUrl = getCheckoutUrl(result);
+    if (!checkoutUrl) {
+      return res.status(500).json({ success: false, message: "Mercado Pago no devolvió URL de checkout." });
+    }
+
+    res.status(200).json({
+      success: true,
+      preferenceId: result.id,
+      initPoint: checkoutUrl,
+      sandbox: isTestMode,
+    });
   } catch (error) {
     console.error("Error en createPreference:", error);
     res.status(500).json({ success: false, message: "Error al crear la preferencia de pago." });
