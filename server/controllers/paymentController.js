@@ -40,9 +40,7 @@ const createPreference = async (req, res) => {
       },
     });
 
-    const preference = new Preference(client);
-    const result = await preference.create({
-      body: {
+    const preferenceBody = {
         items: [
           {
             title: planInfo.title,
@@ -52,7 +50,6 @@ const createPreference = async (req, res) => {
           },
         ],
         external_reference: String(subscription.id),
-        payer: { email: req.user.email },
         back_urls: {
           success: `${process.env.CLIENT_URL}/business/dashboard?payment=success`,
           failure: `${process.env.CLIENT_URL}/dashboard?reopen_plan_modal=true&status=failed`,
@@ -60,8 +57,16 @@ const createPreference = async (req, res) => {
         },
         auto_return: "approved",
         notification_url: `${process.env.SERVER_URL || process.env.CLIENT_URL}/api/payments/webhook`,
-      },
-    });
+      };
+
+    // En sandbox no enviar payer.email: si coincide con una cuenta real de MP
+    // provoca "Una de las partes con la que intentas hacer el pago es de prueba".
+    if (!isTestMode) {
+      preferenceBody.payer = { email: req.user.email };
+    }
+
+    const preference = new Preference(client);
+    const result = await preference.create({ body: preferenceBody });
 
     await prisma.subscriptions.update({
       where: { id: subscription.id },
