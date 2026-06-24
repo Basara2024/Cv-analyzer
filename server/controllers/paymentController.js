@@ -2,7 +2,10 @@ const { MercadoPagoConfig, Preference, Payment } = require("mercadopago");
 const prisma = require("../config/db");
 
 const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN || "";
-const isTestMode = accessToken.startsWith("TEST-");
+const isTestToken = accessToken.startsWith("TEST-");
+// true = redirigir a sandbox_init_point (TEST- o APP_USR de cuenta vendedor de prueba + MERCADOPAGO_SANDBOX=true)
+const useSandboxCheckout =
+  isTestToken || process.env.MERCADOPAGO_SANDBOX === "true";
 const client = new MercadoPagoConfig({ accessToken });
 
 // Cuenta MP Colombia: el checkout procesa en COP (no USD).
@@ -12,7 +15,7 @@ const PLAN_PRICES = {
 };
 
 function getCheckoutUrl(preference) {
-  if (isTestMode) {
+  if (useSandboxCheckout) {
     return preference.sandbox_init_point || preference.init_point;
   }
   return preference.init_point;
@@ -61,7 +64,7 @@ const createPreference = async (req, res) => {
 
     // En sandbox no enviar payer.email: si coincide con una cuenta real de MP
     // provoca "Una de las partes con la que intentas hacer el pago es de prueba".
-    if (!isTestMode) {
+    if (!useSandboxCheckout) {
       preferenceBody.payer = { email: req.user.email };
     }
 
@@ -78,11 +81,14 @@ const createPreference = async (req, res) => {
       return res.status(500).json({ success: false, message: "Mercado Pago no devolvió URL de checkout." });
     }
 
+    const isSandboxUrl = checkoutUrl.includes("sandbox");
+
     res.status(200).json({
       success: true,
       preferenceId: result.id,
       initPoint: checkoutUrl,
-      sandbox: isTestMode,
+      sandbox: useSandboxCheckout,
+      sandboxUrl: isSandboxUrl,
     });
   } catch (error) {
     console.error("Error en createPreference:", error);

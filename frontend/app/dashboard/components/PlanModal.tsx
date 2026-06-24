@@ -13,6 +13,7 @@ export default function PlanModal({ onClose }: PlanModalProps) {
   const [businessBilling, setBusinessBilling] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sandboxCheckoutUrl, setSandboxCheckoutUrl] = useState<string | null>(null);
 
   const handleIndividualClick = () => {
     router.push("/coming-soon");
@@ -24,12 +25,52 @@ export default function PlanModal({ onClose }: PlanModalProps) {
     try {
       const plan = businessBilling === "monthly" ? "business_monthly" : "business_yearly";
       const res = await api.post("/payments/create-preference", { plan });
+      if (res.data.sandbox) {
+        setSandboxCheckoutUrl(res.data.initPoint);
+        setLoading(false);
+        return;
+      }
       window.location.href = res.data.initPoint;
     } catch (err: any) {
       setError(err.response?.data?.message || "Error al iniciar el pago. Intenta de nuevo.");
       setLoading(false);
     }
   };
+
+  const handleSandboxContinue = () => {
+    if (sandboxCheckoutUrl) {
+      window.location.href = sandboxCheckoutUrl;
+    }
+  };
+
+  if (sandboxCheckoutUrl) {
+    return (
+      <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+          <div className={styles.header}>
+            <h2 className={styles.title}>Pago de prueba (sandbox)</h2>
+            <p className={styles.subtitle}>Sigue estos pasos o verás el error de &quot;partes de prueba&quot;</p>
+          </div>
+          <div className={styles.sandboxBox}>
+            <ol className={styles.sandboxList}>
+              <li>Abre el checkout en <strong>ventana de incógnito</strong> (sin sesión de Mercado Pago real).</li>
+              <li>En Mercado Pago, pulsa <strong>Ingresar</strong> e inicia sesión con la cuenta <strong>Comprador (Buyer)</strong> de prueba del panel de MP (usuario y contraseña generados, no tu email personal).</li>
+              <li><strong>No pagues como invitado</strong> con tarjeta: en Checkout Pro eso suele fallar en sandbox.</li>
+              <li>Tarjeta de prueba: <code>5254 1336 7440 3564</code>, CVV <code>123</code>, vence <code>11/30</code>, titular <code>APRO</code>.</li>
+            </ol>
+            <button className={styles.primaryBtn} onClick={handleSandboxContinue}>
+              Ir al checkout de Mercado Pago →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.overlay} onClick={onClose}>

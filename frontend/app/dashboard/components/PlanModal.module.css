@@ -253,6 +253,30 @@
   border-radius: var(--radius);
 }
 
+.sandboxBox {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+
+.sandboxList {
+  margin: 0 0 1.25rem 1.1rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.sandboxList code {
+  font-size: 0.8rem;
+  background: var(--bg-card);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
 .spinner {
   width: 16px;
   height: 16px;

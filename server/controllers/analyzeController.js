@@ -21,7 +21,7 @@ const analyzeCV = async (req, res) => {
 
     const analysis = await analyzeWithAI(cvText);
 
-    const saved = await prisma.analysis.create({
+    const saved = await prisma.analyses.create({
       data: {
         user_id: req.user.id,
         file_name: req.file.originalname,
@@ -60,7 +60,7 @@ const analyzeCV = async (req, res) => {
 // @route GET /api/analyze/history
 const getHistory = async (req, res) => {
   try {
-    const analyses = await prisma.analysis.findMany({
+    const analyses = await prisma.analyses.findMany({
       where: { user_id: req.user.id },
       select: {
         id: true,
@@ -82,7 +82,7 @@ const getHistory = async (req, res) => {
 // @route GET /api/analyze/:id
 const getAnalysis = async (req, res) => {
   try {
-    const analysis = await prisma.analysis.findFirst({
+    const analysis = await prisma.analyses.findFirst({
       where: { id: parseInt(req.params.id), user_id: req.user.id },
     });
 
@@ -108,7 +108,7 @@ const getAnalysis = async (req, res) => {
 // @route DELETE /api/analyze/:id
 const deleteAnalysis = async (req, res) => {
   try {
-    const analysis = await prisma.analysis.findFirst({
+    const analysis = await prisma.analyses.findFirst({
       where: { id: parseInt(req.params.id), user_id: req.user.id },
     });
 
@@ -116,7 +116,7 @@ const deleteAnalysis = async (req, res) => {
       return res.status(404).json({ success: false, message: "Análisis no encontrado." });
     }
 
-    await prisma.analysis.delete({ where: { id: parseInt(req.params.id) } });
+    await prisma.analyses.delete({ where: { id: parseInt(req.params.id) } });
 
     await prisma.users.update({
       where: { id: req.user.id },
